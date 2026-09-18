@@ -1,0 +1,52 @@
+plugin-version: 3.0.0
+name: farmer
+display-name: farmer
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -148.69227371241246
+    y: 71.0
+    z: 61.469371271399154
+    yaw: -89.69961
+    pitch: -1.199968
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 84
+regions:
+  region-0:
+    name: farmer
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -167,38,43
+      max: -131,70,79
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:redstone_block
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:iron_block
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:lapis_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}

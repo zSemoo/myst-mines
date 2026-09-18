@@ -1,0 +1,52 @@
+plugin-version: 3.0.0
+name: Vig
+display-name: Vig
+flags:
+  warn: true
+  warn-hotbar: false
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -156.63624306457356
+    y: 69.0
+    z: -335.2748279249918
+    yaw: -83.99921
+    pitch: 24.600033
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 204
+regions:
+  region-0:
+    name: Vig
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -175,38,-344
+      max: -143,68,-329
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:andesite
+            chance: 35.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:cobblestone
+            chance: 60.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:coal_ore
+            chance: 5.0
+            drop-type: DEFAULT
+            loot-table: {}

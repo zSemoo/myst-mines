@@ -1,0 +1,57 @@
+plugin-version: 3.0.0
+name: serf
+display-name: serf
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -73.67308989064742
+    y: 68.0
+    z: -195.30452793236003
+    yaw: -178.34956
+    pitch: 7.050061
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 114
+regions:
+  region-0:
+    name: serf
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -90,38,-213
+      max: -58,67,-181
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:coal_block
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:coal_ore
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:iron_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:cobblestone
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}

@@ -1,0 +1,70 @@
+# ===========================================================================
+# MINE EVENTS
+#
+#   /mine party <mine> [seconds]     the whole mine becomes one rich block
+#   /mine vein <mine> [seconds]      a seam of a valuable block is mixed in
+#   /mine rush <mine> [seconds]      the reset timer collapses
+#   /mine double <mine> [seconds]    drops and mining xp multiplied
+#   /mine meteor <mine> [seconds]    one prize block, first to break it wins
+#   /mine stop <mine>                end it early
+#   /mine status                     what's running
+#
+# Each event changes one thing on purpose: an event that alters five things
+# at once can't be tuned. When one ends, the mine's own composition and
+# reset delay are put back exactly and it resets — nothing to undo by hand.
+# ===========================================================================
+
+events:
+
+  party:
+    seconds: 300
+    block: minecraft:diamond_block
+    drop-multiplier: 1.0
+    xp-multiplier: 1.0
+    broadcast: "<gradient:#7de2ff:#e08cff>✦ MINE PARTY in {mine} — {minutes} minutes of solid diamond!</gradient>"
+    title: "<gradient:#7de2ff:#e08cff><bold>MINE PARTY</bold></gradient>"
+    subtitle: "<white>{mine} <gray>— get in there."
+    end-broadcast: "<gray>The party in <white>{mine}<gray> is over."
+
+  golden_vein:
+    seconds: 600
+    block: minecraft:gold_block
+    percent: 12
+    drop-multiplier: 1.0
+    xp-multiplier: 1.5
+    broadcast: "<gradient:#ffd166:#ff8c00>✦ A GOLDEN VEIN runs through {mine} for {minutes} minutes.</gradient>"
+    title: "<gradient:#ffd166:#ff8c00><bold>GOLDEN VEIN</bold></gradient>"
+    subtitle: "<white>{mine} <gray>— follow the gold."
+    end-broadcast: "<gray>The vein in <white>{mine}<gray> has run out."
+
+  rush:
+    seconds: 300
+    # The mine resets this often while the rush runs.
+    reset-delay: 30
+    drop-multiplier: 1.0
+    xp-multiplier: 1.25
+    broadcast: "<gradient:#8cff9e:#1fbf5a>✦ RUSH HOUR in {mine} — it refills as fast as you empty it.</gradient>"
+    title: "<gradient:#8cff9e:#1fbf5a><bold>RUSH HOUR</bold></gradient>"
+    subtitle: "<white>{mine} <gray>— don't stop."
+    end-broadcast: "<gray>The rush in <white>{mine}<gray> is over."
+
+  double_drop:
+    seconds: 600
+    drop-multiplier: 2.0
+    xp-multiplier: 2.0
+    broadcast: "<gradient:#ff9de2:#ff5fd2>✦ DOUBLE DROPS in {mine} for {minutes} minutes.</gradient>"
+    title: "<gradient:#ff9de2:#ff5fd2><bold>DOUBLE DROPS</bold></gradient>"
+    subtitle: "<white>{mine} <gray>— everything pays twice."
+    end-broadcast: "<gray>Double drops in <white>{mine}<gray> have ended."
+
+  meteor:
+    seconds: 900
+    block: ANCIENT_DEBRIS
+    broadcast: "<gradient:#ffd166:#ff4040>☄ A METEOR has landed somewhere in {mine}. First to break it takes it.</gradient>"
+    title: "<gradient:#ffd166:#ff4040><bold>METEOR</bold></gradient>"
+    subtitle: "<white>{mine} <gray>— find it first."
+    claimed-broadcast: "<gradient:#ffd166:#ff4040>☄ {player} reached the meteor first.</gradient>"
+    end-broadcast: "<gray>The meteor in <white>{mine}<gray> went unclaimed."
+    reward-commands:
+      - "crazyvouchers give {player} legendary-key 1"
+      - "eco give {player} 100000"

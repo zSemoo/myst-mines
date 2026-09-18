@@ -1,0 +1,57 @@
+plugin-version: 3.0.0
+name: peasant
+display-name: peasant
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -127.81594201567654
+    y: 67.0
+    z: -155.02653122781385
+    yaw: -177.44966
+    pitch: -4.1999345
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 45
+regions:
+  region-0:
+    name: peasant
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -140,41,-167
+      max: -113,66,-140
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:coal_block
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:iron_ore
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:coal_ore
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:iron_block
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}

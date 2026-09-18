@@ -1,0 +1,57 @@
+plugin-version: 3.0.0
+name: Knight
+display-name: Knight
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -74.5
+    y: 83.0
+    z: 455.5
+    yaw: 0.0
+    pitch: 0.0
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 228
+regions:
+  region-0:
+    name: Knight
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -100,52,430
+      max: -50,82,480
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:lapis_block
+            chance: 35.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:sponge
+            chance: 5.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:gold_ore
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:gold_block
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}

@@ -1,0 +1,117 @@
+# ===========================================================================
+# MINING LEVELS
+#
+# One level per player, not one per mine: a mining career rather than
+# fourteen separate grinds. Every block broken inside a mine pays XP.
+#
+# Levels deliberately do NOTHING to drops or sell prices. A small permanent
+# boost per level compounds into something you can't tune later; a crate key
+# at level 25 you can change any time. Status plus milestone rewards.
+# ===========================================================================
+
+enabled: true
+max-level: 100
+
+# XP to go from level L to L+1 is:  base x L^exponent
+#   base 100, exponent 1.4  ->  L5 ≈ 960 total, L25 ≈ 25k, L50 ≈ 100k
+curve:
+  base: 100
+  exponent: 1.4
+
+xp:
+  # Anything not named below.
+  default: 1
+  # Per mine, for when a whole mine should be worth more.
+  mines:
+    peasant: 1
+    serf: 1.2
+    farmer: 1.4
+    lumberjack: 1.4
+    apprentice: 1.8
+    clergy: 2.2
+    Knight: 2.6
+    lord: 3.0
+    duke: 3.5
+    king: 4.0
+  # Per block, which beats the mine value. Use the material name.
+  blocks:
+    coal_ore: 1
+    coal_block: 2
+    iron_ore: 2
+    iron_block: 4
+    gold_ore: 3
+    gold_block: 6
+    redstone_ore: 3
+    lapis_ore: 3
+    diamond_ore: 8
+    diamond_block: 16
+    emerald_ore: 12
+    emerald_block: 24
+    ancient_debris: 40
+
+# The progress bar under the hotbar as you mine.
+action-bar: true
+bar-width: 20
+bar-char: "|"
+bar-filled-colour: "<green>"
+bar-empty-colour: "<dark_gray>"
+
+# Every Nth level is a milestone: broadcast, firework, bigger reward.
+milestone-every: 10
+milestone-firework: true
+
+title:
+  fade-in-ms: 250
+  stay-ms: 2200
+  fade-out-ms: 500
+
+sounds:
+  level-up: entity.player.levelup
+  milestone: ui.toast.challenge_complete
+
+messages:
+  level-title: "<gradient:#ffd166:#ff8c00><bold>LEVEL {level}</bold></gradient>"
+  level-subtitle: "<gray>Keep swinging."
+  milestone-title: "<gradient:#7de2ff:#e08cff><bold>LEVEL {level}</bold></gradient>"
+  milestone-subtitle: "<white>A milestone. Check your inventory."
+  milestone-broadcast: "<gradient:#ffd166:#ff8c00>✦ {player} reached mining level {level}.</gradient>"
+  action-bar: "<gray>Level <white>{level} <dark_gray>{bar} <gray>{xp}<dark_gray>/{next}"
+
+# Console commands. {player} and {level}.
+rewards:
+  # Run on every single level up.
+  every-level: []
+  # Run on every milestone, on top of anything for that exact level.
+  milestone:
+    - "eco give {player} 10000"
+  # Run on one exact level.
+  levels:
+    10:
+      - "crazyvouchers give {player} rare-key 1"
+    25:
+      - "crazyvouchers give {player} legendary-key 1"
+      - "eco give {player} 50000"
+    50:
+      - "lp user {player} permission set mystmines.veteran true"
+      - "crazyvouchers give {player} legendary-key 3"
+    100:
+      - "broadcast &6{player} &7has maxed out mining."
+      - "crazyvouchers give {player} legendary-key 10"
+
+# What the /level menu says a milestone pays. Commands are opaque, so this
+# is how a player finds out what's coming without asking staff.
+reward-names:
+  10:
+    - "<blue>A rare crate key"
+    - "<gray>$10,000"
+  20:
+    - "<gray>$10,000"
+  25:
+    - "<gold>A legendary crate key"
+    - "<gray>$50,000"
+  50:
+    - "<gold>Veteran Miner"
+    - "<gold>Three legendary keys"
+  100:
+    - "<gold>Ten legendary keys"
+    - "<white>Your name in chat, server-wide"

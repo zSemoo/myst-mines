@@ -1,0 +1,57 @@
+plugin-version: 3.0.0
+name: pvpmine
+display-name: pvpmine
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: true
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -119.25022752767524
+    y: 68.0
+    z: -226.49893666092765
+    yaw: 90.746185
+    pitch: 12.4500675
+controller:
+  reset-mode: TIME
+  reset-delay: 5000
+  reset-percentage: 0.0
+  countdown: 4745
+regions:
+  region-0:
+    name: pvpmine
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -127,57,-229
+      max: -121,67,-225
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:diamond_block
+            chance: 15.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:gold_block
+            chance: 35.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:iron_block
+            chance: 45.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:emerald_block
+            chance: 5.0
+            drop-type: DEFAULT
+            loot-table: {}

@@ -1,0 +1,62 @@
+plugin-version: 3.0.0
+name: apprentice
+display-name: apprentice
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -227.96530626889532
+    y: 71.0
+    z: -156.48199778576972
+    yaw: -142.49963
+    pitch: 21.600039
+controller:
+  reset-mode: TIME
+  reset-delay: 250
+  reset-percentage: 0.0
+  countdown: 130
+regions:
+  region-0:
+    name: apprentice
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -241,45,-170
+      max: -214,70,-143
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:coal_block
+            chance: 34.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:iron_block
+            chance: 31.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:redstone_block
+            chance: 5.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:redstone_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-4:
+            block: minecraft:iron_ore
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}

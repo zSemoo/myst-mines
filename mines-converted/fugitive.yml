@@ -1,0 +1,57 @@
+plugin-version: 3.0.0
+name: fugitive
+display-name: fugitive
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -185.75160037748614
+    y: 68.0
+    z: -243.9608931640454
+    yaw: 90.45277
+    pitch: 3.7500217
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 239
+regions:
+  region-0:
+    name: fugitive
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -202,38,-261
+      max: -170,67,-229
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:cobblestone
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:coal_ore
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:iron_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:prismarine
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}

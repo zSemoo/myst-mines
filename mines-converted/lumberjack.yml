@@ -1,0 +1,57 @@
+plugin-version: 3.0.0
+name: lumberjack
+display-name: lumberjack
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -70.40093239379038
+    y: 71.0
+    z: 43.353723578103086
+    yaw: 90.75045
+    pitch: 4.950056
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 41
+regions:
+  region-0:
+    name: lumberjack
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -88,38,24
+      max: -52,70,60
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:coal_block
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:iron_block
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:redstone_block
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:redstone_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}

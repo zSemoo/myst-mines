@@ -1,0 +1,62 @@
+plugin-version: 3.0.0
+name: duke
+display-name: duke
+flags:
+  warn: true
+  warn-hotbar: true
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: 95.5
+    y: 80.0
+    z: 480.5
+    yaw: 0.0
+    pitch: -0.05892862
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 202
+regions:
+  region-0:
+    name: duke
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: 70,49,455
+      max: 120,79,505
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:sponge
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:diamond_ore
+            chance: 40.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:diamond_block
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:emerald_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-4:
+            block: minecraft:emerald_block
+            chance: 10.0
+            drop-type: DEFAULT
+            loot-table: {}

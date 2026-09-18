@@ -1,0 +1,52 @@
+plugin-version: 3.0.0
+name: VigWood
+display-name: VigWood
+flags:
+  warn: true
+  warn-hotbar: false
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: true
+  reset-teleport-location:
+    ==: org.bukkit.Location
+    world: world
+    x: -158.6656406759407
+    y: 69.0
+    z: -321.118642033655
+    yaw: -8.18988
+    pitch: 1.4998851
+controller:
+  reset-mode: TIME
+  reset-delay: 240
+  reset-percentage: 0.0
+  countdown: 65
+regions:
+  region-0:
+    name: VigWood
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -175,38,-327
+      max: -143,68,-312
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:oak_log[axis=y]
+            chance: 75.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:birch_log[axis=y]
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:acacia_log[axis=y]
+            chance: 5.0
+            drop-type: DEFAULT
+            loot-table: {}

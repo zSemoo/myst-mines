@@ -1,0 +1,79 @@
+# --- IDEs ---
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# --- Gradle ---
+.gradle/
+build/
+!**/src/**/build/
+gradle-app.setting
+.gradletasknamecache
+.gradle-scripts
+
+# --- Java ---
+*.class
+*.jar
+!gradle-wrapper.jar
+*.war
+*.nar
+*.ear
+
+# --- Logs & Temp ---
+*.log
+*~
+*.stackdump
+hs_err_pid*
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# --- Local Development ---
+run/
+bin/
+
+# --- OS Specific ---
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# --- Misc ---
+*.zip
+*.tar.gz
+*.rar

@@ -1,0 +1,54 @@
+plugin-version: 3.0.0
+name: king
+display-name: king
+flags:
+  warn: false
+  warn-hotbar: false
+  warn-global: false
+  warn-seconds: 600
+  teleport-players: false
+controller:
+  reset-mode: TIME
+  reset-delay: 0
+  reset-percentage: 0.0
+  countdown: 0
+regions:
+  region-0:
+    name: king
+    world: world
+    region-type: SELECTION
+    selection-type: CUBOID
+    selection:
+      min: -171,38,549
+      max: -71,79,649
+    compositions:
+      composition-0:
+        name: default
+        chance: 100.0
+        flags: {}
+        blocks:
+          block-0:
+            block: minecraft:diamond_ore
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-1:
+            block: minecraft:diamond_block
+            chance: 25.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-2:
+            block: minecraft:emerald_ore
+            chance: 30.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-3:
+            block: minecraft:emerald_block
+            chance: 20.0
+            drop-type: DEFAULT
+            loot-table: {}
+          block-4:
+            block: minecraft:sponge
+            chance: 5.0
+            drop-type: DEFAULT
+            loot-table: {}
