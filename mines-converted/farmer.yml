@@ -38,15 +38,15 @@ regions:
           block-0:
             block: minecraft:redstone_block
             chance: 40.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:iron_block
             chance: 40.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:lapis_ore
             chance: 20.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}

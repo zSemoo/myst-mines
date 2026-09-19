@@ -38,20 +38,20 @@ regions:
           block-0:
             block: minecraft:lapis_block
             chance: 20.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:lapis_ore
             chance: 20.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:gold_ore
             chance: 20.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-3:
             block: minecraft:iron_block
             chance: 40.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}

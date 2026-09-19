@@ -38,25 +38,25 @@ regions:
           block-0:
             block: minecraft:diamond_block
             chance: 5.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:diamond_ore
             chance: 10.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:nether_bricks
             chance: 30.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-3:
             block: minecraft:gold_block
             chance: 30.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-4:
             block: minecraft:sponge
             chance: 25.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}

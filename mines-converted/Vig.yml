@@ -38,15 +38,15 @@ regions:
           block-0:
             block: minecraft:andesite
             chance: 35.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:cobblestone
             chance: 60.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:coal_ore
             chance: 5.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}

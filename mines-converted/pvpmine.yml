@@ -38,20 +38,20 @@ regions:
           block-0:
             block: minecraft:diamond_block
             chance: 15.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:gold_block
             chance: 35.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:iron_block
             chance: 45.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-3:
             block: minecraft:emerald_block
             chance: 5.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}

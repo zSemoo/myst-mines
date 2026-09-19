@@ -38,20 +38,20 @@ regions:
           block-0:
             block: minecraft:coal_block
             chance: 30.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:iron_ore
             chance: 30.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:coal_ore
             chance: 30.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-3:
             block: minecraft:iron_block
             chance: 10.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}

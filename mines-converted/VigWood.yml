@@ -38,15 +38,15 @@ regions:
           block-0:
             block: minecraft:oak_log[axis=y]
             chance: 75.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-1:
             block: minecraft:birch_log[axis=y]
             chance: 20.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
           block-2:
             block: minecraft:acacia_log[axis=y]
             chance: 5.0
-            drop-type: DEFAULT
+            drop-type: CUSTOM
             loot-table: {}
