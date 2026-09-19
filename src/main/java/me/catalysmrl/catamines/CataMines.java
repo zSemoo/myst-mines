@@ -50,6 +50,9 @@ public final class CataMines extends JavaPlugin {
         mineManager = new MineManager(this);
         // --- MystCity additions: levelling and mine events
         mineEvents = new me.catalysmrl.catamines.myst.event.MineEvents(this);
+        // Mines load two ticks in; give them a moment, then put back anything
+        // an interrupted event left painted.
+        getServer().getScheduler().runTaskLater(this, () -> mineEvents.restoreOrphans(), 60L);
         mineLevels = new me.catalysmrl.catamines.myst.level.MineLevels(this);
         contributions = new me.catalysmrl.catamines.myst.board.Contributions(this);
         lastBlock = new me.catalysmrl.catamines.myst.dig.LastBlock(this);
@@ -82,6 +85,7 @@ public final class CataMines extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (mineEvents != null) mineEvents.stopAll();
         if (mineLevels != null) mineLevels.save();
         me.catalysmrl.catamines.myst.gui.MineEditGui.saveWatchers(this);
         if (contributions != null) contributions.save();

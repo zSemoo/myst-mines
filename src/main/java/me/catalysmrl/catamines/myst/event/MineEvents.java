@@ -105,6 +105,19 @@ public class MineEvents {
             by.tell("<red>" + mine.getName() + " already has an event running. <gray>/mine event stop " + mine.getName());
             return false;
         }
+        // An entry that has expired but hasn't been cleaned up yet still owns
+        // this mine's original blocks. Ending it properly first means its
+        // composition is restored rather than overwritten and lost — which is
+        // how a mine ended up permanently diamond.
+        if (running.containsKey(key)) stop(key);
+
+        // The mine's file is the only copy of its real composition that a
+        // paint can't scribble over, so take one before touching anything.
+        // It survives a crash, a restart, or a save mid-event.
+        if (!backup(mine)) {
+            by.tell("<red>Couldn't back up " + mine.getName() + " — not starting an event on it.");
+            return false;
+        }
         String path = "events." + kind.name().toLowerCase() + ".";
         if (seconds <= 0) seconds = cfg.getInt(path + "seconds", 300);
 
@@ -132,6 +145,78 @@ public class MineEvents {
         announce(kind, mine, seconds, path, blockOf(blockOverride,
                 cfg.getString(path + "block", kind == Kind.GOLDEN_VEIN ? "minecraft:gold_block" : "minecraft:diamond_block")));
         return true;
+    }
+
+    /** Where a mine's pre-event file is kept. */
+    private java.io.File backupFile(String mineName) {
+        java.io.File dir = new java.io.File(plugin.getDataFolder(), "mines/event-backups");
+        if (!dir.exists() && !dir.mkdirs()) return null;
+        return new java.io.File(dir, mineName.toLowerCase(Locale.ROOT) + ".yml");
+    }
+
+    /** Copies the mine's file aside. False if it couldn't be done. */
+    private boolean backup(CataMine mine) {
+        try {
+            java.io.File source = new java.io.File(plugin.getDataFolder(), "mines/" + mine.getName() + ".yml");
+            if (!source.isFile()) {
+                // saveMine writes it if it somehow isn't there yet
+                plugin.getMineManager().saveMine(mine);
+                if (!source.isFile()) return false;
+            }
+            java.io.File target = backupFile(mine.getName());
+            if (target == null) return false;
+            java.nio.file.Files.copy(source.toPath(), target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        } catch (Exception ex) {
+            plugin.getLogger().severe("Couldn't back up " + mine.getName() + ": " + ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Puts a mine back exactly as it was before its event.
+     *
+     * The backup is copied over the mine's file, the mine is re-read from
+     * disk, and it resets. Nothing here depends on what's in memory, so it
+     * works after a crash, a restart, or a save taken mid-event.
+     */
+    public boolean restoreFromBackup(String mineName) {
+        java.io.File backup = backupFile(mineName);
+        if (backup == null || !backup.isFile()) return false;
+        try {
+            java.io.File target = new java.io.File(plugin.getDataFolder(), "mines/" + mineName + ".yml");
+            // match the real file's capitalisation if it differs
+            java.io.File dir = new java.io.File(plugin.getDataFolder(), "mines");
+            java.io.File[] siblings = dir.listFiles();
+            if (siblings != null) for (java.io.File f : siblings)
+                if (f.getName().equalsIgnoreCase(mineName + ".yml")) target = f;
+
+            java.nio.file.Files.copy(backup.toPath(), target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String realName = target.getName().replaceAll("(?i)\\.yml$", "");
+            var fresh = plugin.getMineManager().reloadMine(realName);
+            fresh.ifPresent(m -> m.reset(plugin));
+            //noinspection ResultOfMethodCallIgnored
+            backup.delete();
+            plugin.getLogger().info("Restored " + realName + " from its pre-event backup.");
+            return fresh.isPresent();
+        } catch (Exception ex) {
+            plugin.getLogger().severe("Couldn't restore " + mineName + ": " + ex.getMessage());
+            return false;
+        }
+    }
+
+    /** On startup: any backup left lying around means an event never ended. */
+    public void restoreOrphans() {
+        java.io.File dir = new java.io.File(plugin.getDataFolder(), "mines/event-backups");
+        java.io.File[] left = dir.listFiles((d, n) -> n.toLowerCase(Locale.ROOT).endsWith(".yml"));
+        if (left == null || left.length == 0) return;
+        for (java.io.File f : left) {
+            String name = f.getName().replaceAll("(?i)\\.yml$", "");
+            plugin.getLogger().warning("An event on '" + name + "' never finished — restoring it.");
+            restoreFromBackup(name);
+        }
     }
 
     /** "sponge" -> "minecraft:sponge"; null -> the default. */
@@ -251,8 +336,10 @@ public class MineEvents {
         if (a == null) {
             // Try the mine's real name, in case they typed a different case
             // or a partial one.
+            // Exact, ignoring case only. A prefix match here meant stopping
+            // "vig" could remove "vigwood" instead.
             for (String candidate : new ArrayList<>(running.keySet()))
-                if (candidate.equalsIgnoreCase(key) || candidate.startsWith(key)) { a = running.remove(candidate); break; }
+                if (candidate.equalsIgnoreCase(key)) { a = running.remove(candidate); break; }
         }
         if (a == null) return false;
         CataMine m = plugin.getMineManager().getMine(a.mine).orElse(null);
@@ -261,6 +348,13 @@ public class MineEvents {
             return false;
         }
         if (a.kind == Kind.RUSH && a.previousDelay >= 0) m.getController().setResetDelay(a.previousDelay);
+        // Restore from the file first; memory is only the fallback.
+        if (restoreFromBackup(a.mine)) {
+            Bukkit.broadcast(MM.deserialize(cfg.getString("events." + a.kind.name().toLowerCase() + ".end-broadcast",
+                    "<gray>The {kind} in <white>{mine}<gray> is over.")
+                    .replace("{kind}", pretty(a.kind)).replace("{mine}", a.mine)));
+            return true;
+        }
         // Put back exactly what each composition held, so a party or a vein
         // leaves nothing behind and nothing has to be reloaded from disk.
         a.savedChances.forEach(me.catalysmrl.catamines.mine.components.composition.CataMineBlock::setChance);

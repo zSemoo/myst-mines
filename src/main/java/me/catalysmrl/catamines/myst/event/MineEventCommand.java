@@ -92,6 +92,13 @@ public class MineEventCommand implements TabExecutor {
                         ? "<gray>No events are running anywhere."
                         : "<gray>Nothing running in <white>" + args[1] + "<gray>. Running: <white>" + String.join(", ", names));
             }
+            case "restore" -> {
+                if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
+                if (args.length < 2) { tell(sender, "<red>/mine restore <mine> <gray>— put it back from its pre-event backup"); return true; }
+                tell(sender, events.restoreFromBackup(args[1].toLowerCase(Locale.ROOT))
+                        ? "<green>Restored from the pre-event backup."
+                        : "<red>No backup for " + args[1] + ". <gray>Nothing was saved aside for it.");
+            }
             case "debug", "diag" -> {
                 if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
                 var mines = plugin.getMineManager().getMines();
@@ -152,7 +159,7 @@ public class MineEventCommand implements TabExecutor {
                 ? Arrays.copyOfRange(rawArgs, 1, rawArgs.length) : rawArgs;
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
-            for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "status", "challenges", "debug", "reload"))
+            for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "restore", "status", "challenges", "debug", "reload"))
                 if (s.startsWith(args[0].toLowerCase(Locale.ROOT))) out.add(s);
         } else if (args.length == 2 && !args[0].equalsIgnoreCase("status") && !args[0].equalsIgnoreCase("challenges")) {
             plugin.getMineManager().getMines().forEach(m -> {

@@ -151,6 +151,24 @@ then wiped on the next swing. Each soul line now starts with a zero-width
 space, so a redraw removes exactly its own lines and leaves everything else
 where it was.
 
+### Events could lose a mine's composition for good
+Three separate faults, all ending in a mine stuck on diamond:
+
+1. **Restoring relied on memory.** If the entry was replaced or the server
+   went down mid-event, the original blocks were gone. A mine's file is now
+   copied to `mines/event-backups/` BEFORE anything is painted, and ending an
+   event restores from that file and re-reads the mine from disk. Nothing in
+   the restore path depends on memory.
+2. **Starting over an expired-but-uncleaned entry** overwrote the object
+   holding the originals. It now ends the old one properly first.
+3. **`stop()` matched by prefix**, so stopping "vig" could remove "vigwood"'s
+   entry instead — which is exactly what the chat log showed. Exact match
+   only, ignoring case.
+
+`/mine restore <mine>` puts a mine back from its backup by hand, and any
+backup still on disk at startup means an event never finished, so it's
+restored automatically with a warning.
+
 ### Reload
 Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
 implemented now: running tasks stopped, current mines saved (so an in-game

@@ -298,6 +298,31 @@ public class MineManager {
      * @param id ID or name of the mine
      * @return the mine if found, otherwise null
      */
+    /**
+     * Re-reads one mine from its file and swaps it into the list.
+     *
+     * Used when an event ends: the mine's file on disk is the only copy of
+     * its real composition that can't be scribbled over by a paint, so
+     * restoring means reading it back rather than trusting memory.
+     */
+    public Optional<CataMine> reloadMine(String name) {
+        Path file = minesPath.resolve(name + ".yml");
+        if (!Files.isRegularFile(file)) {
+            // the file may be named with different case than the mine
+            try (var stream = Files.list(minesPath)) {
+                file = stream.filter(p -> p.getFileName().toString().equalsIgnoreCase(name + ".yml"))
+                        .findFirst().orElse(null);
+            } catch (IOException e) { file = null; }
+            if (file == null) return Optional.empty();
+        }
+        Optional<CataMine> loaded = deserializeCataMineFromYaml(file);
+        loaded.ifPresent(fresh -> {
+            mines.removeIf(m -> m.getName().equalsIgnoreCase(name));
+            mines.add(fresh);
+        });
+        return loaded;
+    }
+
     public Optional<CataMine> getMine(String id) {
         return mines.stream()
                 .filter(cataMine -> cataMine.getName().equals(id))
