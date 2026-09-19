@@ -93,6 +93,15 @@ an event, so a restart mid-event costs at most one reset.
   the week number so everyone sees the same one. Mine-specific, which gives
   the lower mines a reason to exist after you've outgrown them.
 
+### /cm gui
+Upstream's was a stub ("GUI is currently disabled in this version", with a
+TODO to port the legacy menu). Built fresh on the fork's menu base: every
+mine on one screen showing what it's made of, its reset mode and timer, how
+full it is (sampled, not counted — a big mine is millions of blocks), any
+running event, who's leading its contribution board, its level gate and this
+week's challenge. Click to teleport; staff shift-click to reset and
+middle-click to stop or start (`catamines.gui.manage`).
+
 ### Reload
 Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
 implemented now: running tasks stopped, current mines saved (so an in-game
@@ -100,6 +109,19 @@ edit isn't lost), the list cleared, everything read fresh from disk and
 restarted. It reloads every added config too, so one command covers the lot.
 `/level reload`, `/mine reload` and `/pick reload` still work for their own
 files.
+
+### Robustness fixes found in testing
+- A bad `drop-type` threw during deserialization, which killed not just that
+  mine but every mine after it in the folder — so one typo produced zero
+  mines and a stack trace naming no file. Unknown values now warn and fall
+  back to CUSTOM, and each file is loaded in its own try so one bad mine
+  can't take the rest with it.
+- **king.yml had `reset-delay: 0` on TIME mode** (it was 0 in the 2.x config
+  too), so it reset every tick — which meant a fossil buried and announced
+  every tick. Set to 600. The loader now warns on any TIME mine with a
+  delay of 0 rather than letting it quietly hammer the server.
+- Fossils and contribution payouts are rate-limited per mine
+  (`minimum-seconds-between`), so a fast-resetting mine can't spam either.
 
 ## Config migration
 The fourteen live mines were CataMines **2.x** format

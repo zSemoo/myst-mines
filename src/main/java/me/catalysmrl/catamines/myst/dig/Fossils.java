@@ -61,11 +61,24 @@ public class Fossils {
 
     // ------------------------------------------------------------------ placing
 
+    /** When each mine last had a fossil buried, so a fast mine can't spam. */
+    private final Map<String, Long> lastBuried = new HashMap<>();
+
     /** Called after a mine resets. */
     public void onReset(CataMine mine) {
-        byMine.remove(mine.getName().toLowerCase());
+        String mineKey = mine.getName().toLowerCase();
+        byMine.remove(mineKey);
         if (!cfg.getBoolean("fossils.enabled", true)) return;
+
+        // A mine with a tiny (or zero) reset delay resets constantly, and
+        // without this it would bury — and announce — a fossil every time.
+        // One per mine per cooldown, however often it actually resets.
+        long cooldown = cfg.getInt("fossils.minimum-seconds-between", 120) * 1000L;
+        long now = System.currentTimeMillis();
+        if (now - lastBuried.getOrDefault(mineKey, 0L) < cooldown) return;
+
         if (Math.random() > cfg.getDouble("fossils.chance-per-reset", 0.35)) return;
+        lastBuried.put(mineKey, now);
 
         Location at = randomIn(mine);
         if (at == null) return;

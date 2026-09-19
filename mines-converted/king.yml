@@ -9,7 +9,7 @@ flags:
   teleport-players: false
 controller:
   reset-mode: TIME
-  reset-delay: 0
+  reset-delay: 600
   reset-percentage: 0.0
   countdown: 0
 regions:

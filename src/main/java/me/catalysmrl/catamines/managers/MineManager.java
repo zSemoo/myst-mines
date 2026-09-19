@@ -201,13 +201,28 @@ public class MineManager {
             plugin.getLogger().severe("Failed loading directory: " + folder);
         }
 
+        for (CataMine mine : cataMines) {
+            var controller = mine.getController();
+            if (controller.getResetMode() == me.catalysmrl.catamines.mine.components.manager.controller.CataMineController.ResetMode.TIME
+                    && controller.getResetDelay() <= 0)
+                plugin.getLogger().warning("Mine '" + mine.getName() + "' resets on TIME with a delay of "
+                        + controller.getResetDelay() + " — it will reset continuously. Set a reset-delay, or use PERCENTAGE mode.");
+        }
         plugin.getLogger().info("Loaded " + cataMines.size() + " mines");
         return cataMines;
     }
 
     private Optional<CataMine> deserializeCataMineFromYaml(Path path) {
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(path.toFile());
-        return deserializeCataMine(cfg);
+        try {
+            return deserializeCataMine(cfg);
+        } catch (RuntimeException e) {
+            // Name the file. Without this a bad value anywhere in the folder
+            // produces a stack trace that says nothing about which mine it
+            // came from, and the rest of the folder silently never loads.
+            plugin.getLogger().severe("Couldn't load " + path.getFileName() + ": " + e.getMessage());
+            return Optional.empty();
+        }
     }
 
     private Optional<CataMine> deserializeCataMine(ConfigurationSection section) {

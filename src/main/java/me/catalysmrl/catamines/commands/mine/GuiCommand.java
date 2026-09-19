@@ -17,8 +17,11 @@ public class GuiCommand extends AbstractCommand {
 
     @Override
     public void execute(CataMines plugin, CommandSender sender, CommandContext ctx) throws CommandException {
-        Messages.sendPrefixed(sender, "&cGUI is currently disabled in this version.");
-        // TODO: Port menu system from legacy
+        if (!(sender instanceof org.bukkit.entity.Player player)) {
+            Messages.sendPrefixed(sender, "&cPlayers only.");
+            return;
+        }
+        new me.catalysmrl.catamines.myst.gui.MineGui(plugin).open(player);
     }
 
     @Override

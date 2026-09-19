@@ -33,6 +33,9 @@ permissions:
   mystmines.level.admin:
     description: Set, give and reset mining levels
     default: op
+  catamines.gui.manage:
+    description: Reset and stop mines from /cm gui
+    default: op
   mystmines.souls.awaken:
     description: Wake a soul in a pickaxe
     default: true

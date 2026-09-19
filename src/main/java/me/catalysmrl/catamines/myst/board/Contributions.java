@@ -69,9 +69,16 @@ public class Contributions {
         return counts.getOrDefault(mine.toLowerCase(), Map.of()).getOrDefault(player, 0);
     }
 
+    /** When each mine last paid out, so a fast-resetting mine can't spam. */
+    private final Map<String, Long> lastPaid = new HashMap<>();
+
     /** Called when a mine resets: pay the top few, then wipe the slate. */
     public void onReset(CataMine mine) {
         String key = mine.getName().toLowerCase();
+        long cooldown = cfg.getInt("contributions.minimum-seconds-between", 60) * 1000L;
+        long now = System.currentTimeMillis();
+        if (now - lastPaid.getOrDefault(key, 0L) < cooldown) { counts.remove(key); return; }
+        lastPaid.put(key, now);
         List<Map.Entry<UUID, Integer>> top = standings(key);
         counts.remove(key);
         if (top.isEmpty() || !cfg.getBoolean("contributions.pay-on-reset", true)) return;

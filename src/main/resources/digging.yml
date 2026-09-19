@@ -10,6 +10,10 @@ fossils:
   enabled: true
   # How often a reset buries one.
   chance-per-reset: 0.35
+  # And never more than one this often, however fast the mine resets. A mine
+  # with a small reset delay would otherwise bury (and announce) one every
+  # few seconds.
+  minimum-seconds-between: 120
   # Radius of the cluster. 2 is about seven blocks.
   size: 2
   shell-block: BONE_BLOCK
@@ -40,6 +44,8 @@ contributions:
   # Below this many blocks you're not in the running, so an empty mine
   # doesn't pay out for six blocks.
   minimum-blocks: 50
+  # And never pay out more often than this, however fast the mine resets.
+  minimum-seconds-between: 60
   announce: true
   broadcast: "<gray>Top of <white>{mine}<gray> this reset: {names}<gray>."
   paid: "<gradient:#ffd166:#ff8c00>✦ #{place} in {mine}</gradient> <gray>— {blocks} blocks."

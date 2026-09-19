@@ -72,7 +72,19 @@ public class CataMineBlock implements Choice, SectionSerializable, RewardHolder 
 
         double chance = section.getDouble("chance", 0d);
 
-        DropType dropType = DropType.valueOf(section.getString("drop-type", "CUSTOM"));
+        // An unknown drop-type used to throw, which took out the whole mine
+        // and every mine after it in the folder. Warn and carry on instead:
+        // one typo in one block is not worth losing fourteen mines over.
+        String dropTypeName = section.getString("drop-type", "CUSTOM");
+        DropType dropType;
+        try {
+            dropType = DropType.valueOf(dropTypeName.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            dropType = DropType.CUSTOM;
+            org.bukkit.Bukkit.getLogger().warning("[CataMines] '" + dropTypeName + "' is not a drop-type ("
+                    + java.util.Arrays.toString(DropType.values()) + ") in " + section.getCurrentPath()
+                    + " — using CUSTOM.");
+        }
 
         ConfigurationSection itemsSection = section.getConfigurationSection("loot-table");
         List<CataMineItem> itemList = new ArrayList<>();
