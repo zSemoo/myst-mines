@@ -1,38 +1,6 @@
 # ===========================================================================
-# FOSSILS, CONTRIBUTION BOARDS AND THE LAST BLOCK
+# CONTRIBUTION BOARDS AND THE LAST BLOCK
 # ===========================================================================
-
-# ---------------------------------------------------------------- fossils
-# A small buried cluster placed on reset. Break any part and a clock starts:
-# dig the rest out in time and it pays, run out and it crumbles to gravel.
-# So it isn't "find the rare block", it's "spot it, then handle it".
-fossils:
-  enabled: true
-  # How often a reset buries one.
-  chance-per-reset: 0.35
-  # And never more than one this often, however fast the mine resets. A mine
-  # with a small reset delay would otherwise bury (and announce) one every
-  # few seconds.
-  minimum-seconds-between: 120
-  # Radius of the cluster. 2 is about seven blocks.
-  size: 2
-  shell-block: BONE_BLOCK
-  heart-block: AMETHYST_BLOCK
-  # How long the finder has to get the rest out.
-  seconds: 25
-  # Only the person who found it can dig it; false lets anyone pile in.
-  finder-only: true
-  # Say when one is buried. Off makes them a genuine surprise.
-  announce-placed: true
-  placed-broadcast: "<gray>Something old is buried in <white>{mine}<gray>."
-  found-title: "<gradient:#ffd166:#ff8c00><bold>FOSSIL</bold></gradient>"
-  found-subtitle: "<gray>Dig it out — carefully, and quickly."
-  claimed-broadcast: "<gradient:#ffd166:#ff8c00>✦ {player} excavated a fossil from {mine}.</gradient>"
-  crumbled: "<gray>The fossil crumbles. <dark_gray>Too slow."
-  xp: 500
-  reward-commands:
-    - "crazyvouchers give {player} rare-key 1"
-    - "eco give {player} 25000"
 
 # ---------------------------------------------------------------- contributions
 # Who dug the most out of a mine THIS reset. Wiped every reset, which is
@@ -67,6 +35,8 @@ last-block:
   blocks-left: 3
   # Counting a whole region is expensive, so it's only checked every N breaks.
   check-every: 20
+  # And never paid more often than this.
+  minimum-seconds-between: 60
   xp: 250
   broadcast: "<gradient:#8cff9e:#1fbf5a>✦ {player} emptied {mine} — last block bonus.</gradient>"
   reward-commands:

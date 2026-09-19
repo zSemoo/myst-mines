@@ -102,6 +102,35 @@ running event, who's leading its contribution board, its level gate and this
 week's challenge. Click to teleport; staff shift-click to reset and
 middle-click to stop or start (`catamines.gui.manage`).
 
+### Cleanup, 2026-09-19
+Two generations of the same features had ended up wired in together —
+`ContributionBoards`/`Contributions`, `soul.PickaxeSouls`/`pick.PickaxeSouls`,
+`MineExtras` with its own fossil — both registered, fighting over the same
+events and the same item keys. That was the doubled fossil messages, the
+stuck soul progress and the dead party. Consolidated onto the set whose
+configs match; the old classes and `boards.yml`/`extras.yml` are gone.
+
+- **Fossils removed** entirely. The last-block bonus, which lived in the same
+  class, has its own home now (`dig/LastBlock`).
+- **Pickaxe souls** — `getItemInMainHand()` can return a copy on newer
+  Paper, so edits never reached the inventory. The edited stack is now set
+  back into the hand explicitly.
+- **Mine party** painted only the CURRENT composition, but a reset refills
+  from the UPCOMING one, so nothing changed. Paints every composition of every
+  region now, and restores them all on stop.
+- **`/mine event stop <mine>`** works — `event` is accepted and skipped.
+- **`/cm gui`** clicking a mine (as staff) opens a per-mine editor: blocks and
+  percentages editable in place with the total shown green/red at 100%,
+  add a block by holding it, teleport, a reset countdown on your action bar,
+  the global-announce toggle, a reset delay editor (never below 5s), an
+  enable/disable switch, and reset-now.
+- **/level** redone as three rows: you / what's coming / where to go.
+  **/level top** puts the level in every tile's name.
+- Levels, contributions and challenges are all saved on shutdown.
+
+`/cm setresetteleport` takes the mine name: `/cm setresetteleport king`. If
+it's still refusing with the name given, paste what it says.
+
 ### Reload
 Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
 implemented now: running tasks stopped, current mines saved (so an in-game

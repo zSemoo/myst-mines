@@ -138,8 +138,13 @@ public class MineEvents {
      */
     private void paint(CataMine mine, String block, double percent, Active a) {
         try {
+            // Every composition of every region, not just the current one: a
+            // reset refills from the UPCOMING composition, so painting only the
+            // current one changed nothing visible — which is why a party did
+            // nothing at all.
             mine.getRegionManager().getChoices().forEach(region ->
-                region.getCompositionManager().getCurrent().ifPresent(comp -> {
+                region.getCompositionManager().getChoices().forEach(comp -> {
+                    if (a.saved.containsKey(comp)) return;
                     var blocks = comp.getBlocks();
                     // The mine's own blocks are kept so stop() can put them
                     // back exactly; nothing is read from or written to disk.

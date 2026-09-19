@@ -26,13 +26,10 @@ public final class CataMines extends JavaPlugin {
     private MineManager mineManager;
     private me.catalysmrl.catamines.myst.level.MineLevels mineLevels;
     private me.catalysmrl.catamines.myst.event.MineEvents mineEvents;
-    private me.catalysmrl.catamines.myst.dig.Fossils fossils;
     private me.catalysmrl.catamines.myst.board.Contributions contributions;
+    private me.catalysmrl.catamines.myst.dig.LastBlock lastBlock;
     private me.catalysmrl.catamines.myst.challenge.MineChallenges mineChallenges;
     private me.catalysmrl.catamines.myst.pick.PickaxeSouls pickaxeSouls;
-    private me.catalysmrl.catamines.myst.board.ContributionBoards boards;
-    private me.catalysmrl.catamines.myst.soul.PickaxeSouls souls;
-    private me.catalysmrl.catamines.myst.extra.MineExtras extras;
     private CommandManager commandManager;
     private RewardManager rewardManager;
     private RewardParser rewardParser;
@@ -54,13 +51,10 @@ public final class CataMines extends JavaPlugin {
         // --- MystCity additions: levelling and mine events
         mineEvents = new me.catalysmrl.catamines.myst.event.MineEvents(this);
         mineLevels = new me.catalysmrl.catamines.myst.level.MineLevels(this);
-        fossils = new me.catalysmrl.catamines.myst.dig.Fossils(this);
         contributions = new me.catalysmrl.catamines.myst.board.Contributions(this);
+        lastBlock = new me.catalysmrl.catamines.myst.dig.LastBlock(this);
         mineChallenges = new me.catalysmrl.catamines.myst.challenge.MineChallenges(this);
         pickaxeSouls = new me.catalysmrl.catamines.myst.pick.PickaxeSouls(this);
-        boards = new me.catalysmrl.catamines.myst.board.ContributionBoards(this);
-        souls = new me.catalysmrl.catamines.myst.soul.PickaxeSouls(this);
-        extras = new me.catalysmrl.catamines.myst.extra.MineExtras(this);
         
         // Setup Reward Engine
         rewardManager = new RewardManager();
@@ -88,9 +82,9 @@ public final class CataMines extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (boards != null) boards.shutdown();
-        if (extras != null) extras.saveProgress();
         if (mineLevels != null) mineLevels.save();
+        if (contributions != null) contributions.save();
+        if (mineChallenges != null) mineChallenges.save();
         INSTANCE = null;
         commandManager = null;
 
@@ -149,19 +143,15 @@ public final class CataMines extends JavaPlugin {
         pm.registerEvents(mineLevels, this);
         pm.registerEvents(new me.catalysmrl.catamines.myst.level.MineGateListener(this), this);
         pm.registerEvents(new me.catalysmrl.catamines.myst.dig.DigListener(this), this);
-        getServer().getScheduler().runTaskTimer(this, () -> fossils.tick(), 40L, 20L);
         getServer().getScheduler().runTaskTimer(this, () -> {
             contributions.save();
             mineChallenges.save();
         }, 1200L, 1200L);
-        pm.registerEvents(boards, this);
-        pm.registerEvents(souls, this);
-        pm.registerEvents(extras, this);
-        getServer().getScheduler().runTaskTimer(this, () -> boards.tick(), 100L, 60L);
-        getServer().getScheduler().runTaskTimer(this, () -> extras.saveProgress(), 600L, 1200L);
         pm.registerEvents(new me.catalysmrl.catamines.myst.gui.MystGui.Clicks(), this);
         pm.registerEvents(new me.catalysmrl.catamines.myst.event.MeteorListener(this), this);
         getServer().getScheduler().runTaskTimer(this, () -> mineEvents.tick(), 20L, 20L);
+        getServer().getScheduler().runTaskTimer(this,
+                () -> me.catalysmrl.catamines.myst.gui.MineEditGui.tickCountdowns(this), 40L, 20L);
         getServer().getScheduler().runTaskTimer(this, () -> mineLevels.save(), 600L, 1200L);
         pm.registerEvents(new me.catalysmrl.catamines.mine.rewards.listeners.RewardListener(this), this);
     }
@@ -170,16 +160,13 @@ public final class CataMines extends JavaPlugin {
 
     public me.catalysmrl.catamines.myst.event.MineEvents getMineEvents() { return mineEvents; }
 
-    public me.catalysmrl.catamines.myst.dig.Fossils getFossils() { return fossils; }
-
     public me.catalysmrl.catamines.myst.board.Contributions getContributions() { return contributions; }
+
+    public me.catalysmrl.catamines.myst.dig.LastBlock getLastBlock() { return lastBlock; }
 
     public me.catalysmrl.catamines.myst.challenge.MineChallenges getMineChallenges() { return mineChallenges; }
 
     public me.catalysmrl.catamines.myst.pick.PickaxeSouls getPickaxeSouls() { return pickaxeSouls; }
-    public me.catalysmrl.catamines.myst.board.ContributionBoards getBoards() { return boards; }
-    public me.catalysmrl.catamines.myst.soul.PickaxeSouls getSouls() { return souls; }
-    public me.catalysmrl.catamines.myst.extra.MineExtras getExtras() { return extras; }
 
     public MineManager getMineManager() {
         return mineManager;

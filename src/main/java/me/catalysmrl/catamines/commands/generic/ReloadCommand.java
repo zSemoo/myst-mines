@@ -24,7 +24,7 @@ public class ReloadCommand extends AbstractCommand {
         plugin.reloadConfig();
         plugin.getMineLevels().reload();
         plugin.getMineEvents().reload();
-        plugin.getFossils().reload();
+        plugin.getLastBlock().reload();
         plugin.getContributions().reload();
         plugin.getMineChallenges().reload();
         plugin.getPickaxeSouls().reload();

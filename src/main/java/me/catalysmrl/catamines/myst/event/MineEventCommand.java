@@ -6,21 +6,23 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * /mine — the staff switches for mine events.
+ * /mine — mine events, and a few things about mines that aren't events.
  *
- *   /mine party <mine> [seconds]
- *   /mine vein <mine> [seconds]
- *   /mine rush <mine> [seconds]
- *   /mine double <mine> [seconds]
- *   /mine meteor <mine> [seconds]
- *   /mine stop <mine>
- *   /mine status
+ *   /mine party|vein|rush|double|meteor <mine> [seconds]
+ *   /mine stop <mine>          end an event early
+ *   /mine status               what's running
+ *   /mine challenges           this week's, and how you're doing
+ *   /mine reload
+ *
+ * `/mine event <...>` is accepted as well, because that's what people type.
  */
 public class MineEventCommand implements TabExecutor {
 
@@ -45,21 +47,16 @@ public class MineEventCommand implements TabExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        MineEvents events = plugin.getMineEvents();
-        // /mine challenges is for everyone; the rest is staff
-        boolean staff = sender.hasPermission("mystmines.events");
-        if (args.length > 0 && !args[0].equalsIgnoreCase("challenge") && !args[0].equalsIgnoreCase("challenges") && !staff) {
-            tell(sender, "<gray>/mine challenges <dark_gray>— this week's mine challenges");
-            return true;
-        }
-        if (args.length == 0 && !staff) { tell(sender, "<gray>/mine challenges"); return true; }
+        // "/mine event stop king" and "/mine stop king" should both work.
+        if (args.length > 0 && args[0].equalsIgnoreCase("event")) args = Arrays.copyOfRange(args, 1, args.length);
 
         if (args.length == 0) {
             tell(sender, "<gold>/mine party|vein|rush|double|meteor <mine> [seconds]");
-            tell(sender, "<gold>/mine stop <mine> <dark_gray>| <gold>/mine status <dark_gray>| <gold>/mine reload");
+            tell(sender, "<gold>/mine stop <mine> <dark_gray>| <gold>status <dark_gray>| <gold>challenges");
             return true;
         }
 
+        MineEvents events = plugin.getMineEvents();
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "status" -> {
                 if (events.all().isEmpty()) { tell(sender, "<gray>Nothing running."); return true; }
@@ -67,47 +64,36 @@ public class MineEventCommand implements TabExecutor {
                     tell(sender, "<gray>• <white>" + a.mine + " <dark_gray>" + MineEvents.pretty(a.kind)
                             + " <gray>" + Math.max(0, (a.endsAt - System.currentTimeMillis()) / 1000) + "s left");
             }
+            case "challenges", "challenge", "weekly" -> {
+                if (!(sender instanceof Player p)) { tell(sender, "<red>Players only."); return true; }
+                var all = plugin.getMineChallenges().allThisWeek();
+                if (all.isEmpty()) { tell(sender, "<gray>No challenges this week."); return true; }
+                tell(sender, "<gradient:#8cff9e:#1fbf5a>This week's challenges</gradient>");
+                for (var c : all) {
+                    boolean done = plugin.getMineChallenges().claimed(p, c);
+                    int prog = plugin.getMineChallenges().progress(p, c);
+                    tell(sender, "<gray>• <white>" + c.name() + " <dark_gray>"
+                            + (done ? "<green>done" : prog + "/" + c.amount()));
+                }
+            }
             case "stop" -> {
+                if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
                 if (args.length < 2) { tell(sender, "<red>/mine stop <mine>"); return true; }
+                if (events.running(args[1]) == null) { tell(sender, "<gray>Nothing running in " + args[1] + "."); return true; }
                 events.stop(args[1]);
                 tell(sender, "<green>Stopped.");
             }
             case "reload" -> {
+                if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
                 events.reload();
-                plugin.getFossils().reload();
+                plugin.getMineChallenges().reload();
                 plugin.getContributions().reload();
-                plugin.getPickaxeSouls().reload();
-                tell(sender, "<green>Reloaded events, digging and souls configs.");
-            }
-            case "board" -> {
-                // /mine board <mine>       place the live top-three hologram where you stand
-                // /mine board <mine> remove
-                if (!(sender instanceof org.bukkit.entity.Player p)) return true;
-                if (args.length < 2) { tell(sender, "<red>/mine board <mine> [remove]"); return true; }
-                if (args.length > 2 && args[2].equalsIgnoreCase("remove")) {
-                    tell(sender, plugin.getBoards().removeBoard(args[1]) ? "<green>Board removed." : "<gray>No board for that mine.");
-                    return true;
-                }
-                CataMine mine = plugin.getMineManager().getMine(args[1]).orElse(null);
-                if (mine == null) { tell(sender, "<red>No mine called " + args[1] + "."); return true; }
-                plugin.getBoards().placeBoard(mine, p.getLocation().add(0, 1.5, 0));
-                tell(sender, "<green>Board for " + mine.getName() + " placed here.");
-            }
-            case "challenge", "challenges" -> {
-                // what's on this week, for anyone
-                if (!(sender instanceof org.bukkit.entity.Player p)) return true;
-                tell(sender, "<gradient:#7de2ff:#1fa9d6>This week's mine challenges</gradient>");
-                for (CataMine m : plugin.getMineManager().getMines()) {
-                    var c = plugin.getExtras().challengeFor(m.getName());
-                    if (c == null) continue;
-                    boolean fin = plugin.getExtras().finished(p, m.getName());
-                    tell(sender, "<gray>• <white>" + m.getName() + "<gray>: " + c.name() + " <dark_gray>"
-                            + (fin ? "<green>done" : plugin.getExtras().progressOf(p, m.getName()) + "/" + c.target()));
-                }
+                tell(sender, "<green>Reloaded events, challenges and digging configs.");
             }
             default -> {
+                if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
                 MineEvents.Kind kind = kindOf(args[0]);
-                if (kind == null) { tell(sender, "<red>party, vein, rush, double, meteor, stop, status"); return true; }
+                if (kind == null) { tell(sender, "<red>party, vein, rush, double, meteor, stop, status, challenges"); return true; }
                 if (args.length < 2) { tell(sender, "<red>/mine " + args[0] + " <mine> [seconds]"); return true; }
                 CataMine mine = plugin.getMineManager().getMine(args[1]).orElse(null);
                 if (mine == null) { tell(sender, "<red>No mine called " + args[1] + "."); return true; }
@@ -121,11 +107,12 @@ public class MineEventCommand implements TabExecutor {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("event")) args = Arrays.copyOfRange(args, 1, args.length);
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
-            for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "status", "reload"))
+            for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "status", "challenges", "reload"))
                 if (s.startsWith(args[0].toLowerCase(Locale.ROOT))) out.add(s);
-        } else if (args.length == 2 && !args[0].equalsIgnoreCase("status")) {
+        } else if (args.length == 2 && !args[0].equalsIgnoreCase("status") && !args[0].equalsIgnoreCase("challenges")) {
             plugin.getMineManager().getMines().forEach(m -> {
                 if (m.getName().toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))) out.add(m.getName());
             });

@@ -102,13 +102,8 @@ titles:
 # A mine that only opens at a mining level. Below it you can walk in and
 # look; you just can't break anything. Prestiged players pass every gate.
 # mystmines.gate.bypass skips it.
-gates:
-  apprentice: 5
-  clergy: 12
-  Knight: 20
-  lord: 30
-  duke: 45
-  king: 60
+# All open by default. Set them here, or from the mine's editor in /cm gui.
+gates: {}
 
 # ---------------------------------------------------------------- prestige
 # At max level, go round again: back to 1, a permanent star, and every

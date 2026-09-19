@@ -45,7 +45,7 @@ public class PickCommand implements TabExecutor {
         switch (args[0].toLowerCase()) {
             case "awaken", "wake" -> {
                 if (!p.hasPermission("mystmines.souls.awaken")) { tell(sender, "<red>No."); return true; }
-                souls.awaken(p, held);
+                if (souls.awaken(p, held)) p.getInventory().setItemInMainHand(held);
             }
             case "reload" -> {
                 if (!p.hasPermission("mystmines.souls.admin")) { tell(sender, "<red>No."); return true; }
@@ -57,6 +57,7 @@ public class PickCommand implements TabExecutor {
                 if (args.length < 2) { tell(sender, "<red>/pick give <xp>"); return true; }
                 try {
                     souls.onBreak(p, held, Double.parseDouble(args[1]));
+                    p.getInventory().setItemInMainHand(held);
                     tell(sender, "<green>Done.");
                 } catch (NumberFormatException e) { tell(sender, "<red>That's not a number."); }
             }

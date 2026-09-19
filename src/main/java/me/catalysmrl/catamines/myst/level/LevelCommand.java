@@ -98,7 +98,7 @@ public class LevelCommand implements TabExecutor {
                 if (!sender.hasPermission("mystmines.level.admin")) { tell(sender, "<red>No."); return true; }
                 levels.reload();
                 plugin.getMineChallenges().reload();
-                plugin.getFossils().reload();
+                plugin.getLastBlock().reload();
                 tell(sender, "<green>Reloaded levelling, challenges and digging configs.");
             }
             default -> tell(sender, "<gray>/level <dark_gray>| <gray>/level top"

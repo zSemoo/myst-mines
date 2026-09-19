@@ -133,11 +133,10 @@ public class MineGui extends MystGui {
         }
 
         lore.add("");
-        lore.add("<yellow>Click <gray>to teleport");
         if (staff) {
+            lore.add("<yellow>Click <gray>to edit this mine");
             lore.add("<yellow>Shift-click <gray>to reset it now");
-            lore.add("<yellow>Middle-click <gray>to " + (isStopped(mine) ? "start" : "stop") + " it");
-        }
+        } else lore.add("<yellow>Click <gray>to teleport");
 
         Material icon = locked ? Material.IRON_BARS : iconFor(mine);
         return item(icon, (locked ? "<dark_gray>" : "<white>")
@@ -220,7 +219,8 @@ public class MineGui extends MystGui {
             return;
         }
 
-        // teleport: the mine's own teleport point if it has one, else its middle
+        // Staff get the editor; everyone else gets the teleport.
+        if (staff) { new MineEditGui(plugin, mine).open(p); return; }
         var flag = mine.getFlags().getTeleportLocation();
         if (flag != null) { p.closeInventory(); p.teleport(flag); return; }
         try {

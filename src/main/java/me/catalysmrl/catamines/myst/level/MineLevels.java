@@ -77,6 +77,22 @@ public class MineLevels implements Listener {
 
     public boolean enabled() { return cfg.getBoolean("enabled", true); }
     public String message(String key, String def) { return cfg.getString("messages." + key, def); }
+    /** Sets a mine's level gate and writes it to levelling.yml. 0 removes it. */
+    public void setGate(String mine, int level) {
+        File conf = new File(plugin.getDataFolder(), "levelling.yml");
+        // Only the one key is touched, so hand edits elsewhere survive.
+        YamlConfiguration onDisk = YamlConfiguration.loadConfiguration(conf);
+        String key = null;
+        var gates = onDisk.getConfigurationSection("gates");
+        if (gates != null) for (String k : gates.getKeys(false)) if (k.equalsIgnoreCase(mine)) key = k;
+        if (key == null) key = mine;
+        onDisk.set("gates." + key, level <= 0 ? null : level);
+        try { onDisk.save(conf); } catch (Exception ex) {
+            plugin.getLogger().severe("Couldn't save levelling.yml: " + ex.getMessage());
+        }
+        cfg.set("gates." + key, level <= 0 ? null : level);
+    }
+
     public int gateFor(String mine) {
         var gates = cfg.getConfigurationSection("gates");
         if (gates == null || mine == null) return 0;

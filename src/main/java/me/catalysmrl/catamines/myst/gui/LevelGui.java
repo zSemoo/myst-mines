@@ -12,21 +12,24 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * /level — where you are and what's next.
+ * /level, laid out as three rows that each answer one question.
  *
- * The head in the middle is you, with the bar and the numbers. Below it, the
- * upcoming milestone levels and what each one pays, read straight out of
- * levelling.yml so the menu can never disagree with the rewards.
+ *   Row 1 — who you are: your head, level, bar, title, prestige.
+ *   Row 2 — what's next: the coming milestones, left to right, with what
+ *           each pays; the ones you've passed are green.
+ *   Row 3 — where to go: the leaderboard, prestige, the daily bonus.
  */
 public class LevelGui extends MystGui {
 
     private final UUID subject;
-    private static final int ME = 13, TOP = 26, PRESTIGE = 18, NEXT_ROW_START = 28;
+    private static final int ME = 4;
+    private static final int[] MILESTONES = {19, 20, 21, 22, 23, 24, 25};
+    private static final int TOP = 38, PRESTIGE = 40, DAILY = 42;
 
     public LevelGui(CataMines plugin, UUID subject) {
         super(plugin);
         this.subject = subject;
-        create("<dark_gray>Mining <dark_gray>» <gold>your level", 5);
+        create("<dark_gray>Mining <dark_gray>» <gold>your level", 6);
     }
 
     @Override
@@ -35,63 +38,67 @@ public class LevelGui extends MystGui {
         MineLevels levels = plugin.getMineLevels();
         MineLevels.Profile prof = levels.profile(subject);
         var owner = Bukkit.getOfflinePlayer(subject);
+        String name = owner.getName() == null ? "You" : owner.getName();
 
-        long need = levels.xpForNext(prof.level);
-        int place = levels.placeOf(subject);
-
-        List<String> lore = new ArrayList<>();
-        lore.add("<gray>Every block you break in a mine counts.");
-        lore.add("");
-        String stars = levels.stars(prof);
-        if (!stars.isEmpty()) lore.add("<gradient:#e08cff:#7de2ff>" + stars + "</gradient> <gray>prestige " + prof.prestige);
+        // ---- row 1: you
+        List<String> me = new ArrayList<>();
+        me.add("<gray>Level <white>" + prof.level + "<dark_gray>/" + levels.maxLevel());
+        me.add(levels.bar(levels.progress(prof)) + " <dark_gray>" + (long) prof.xp + "/" + levels.xpForNext(prof.level));
         String title = levels.titleFor(prof.level);
-        if (title != null) lore.add("<gray>Title: <white>" + title);
-        lore.add("<gray>Level <white>" + prof.level + "<dark_gray>/" + levels.maxLevel());
-        lore.add(levels.bar(levels.progress(prof)));
-        lore.add("<gray>XP: <white>" + (long) prof.xp + "<dark_gray>/" + need);
-        lore.add("<gray>Blocks mined: <white>" + prof.blocks);
-        if (place > 0) lore.add("<gray>Placed: <white>#" + place);
-        int daily = levels.dailyLeft(prof);
-        lore.add(daily > 0 ? "<gold>Daily bonus: <white>" + daily + " <gray>blocks left" : "<dark_gray>Daily bonus used up.");
-        inventory.setItem(ME, head(owner,
-                "<gradient:#ffd166:#ff8c00>" + (owner.getName() == null ? "You" : owner.getName()) + "</gradient>", lore));
+        if (title != null) me.add("<gray>Title: <white>" + title);
+        if (prof.prestige > 0) me.add("<gradient:#e08cff:#7de2ff>" + levels.stars(prof) + "</gradient> <gray>prestige " + prof.prestige);
+        me.add("");
+        me.add("<gray>Blocks mined: <white>" + prof.blocks);
+        int place = levels.placeOf(subject);
+        if (place > 0) me.add("<gray>Server rank: <white>#" + place);
+        inventory.setItem(ME, head(owner, "<gradient:#ffd166:#ff8c00>" + name + "</gradient>", me));
 
+        // ---- row 2: what's coming
+        int every = levels.milestoneEvery();
+        if (every > 0) {
+            // start from the last milestone passed, so there's always one
+            // green tile on the left to show the shape of it
+            int start = Math.max(every, (prof.level / every) * every);
+            int lvl = start;
+            for (int slot : MILESTONES) {
+                if (lvl > levels.maxLevel()) break;
+                boolean reached = prof.level >= lvl;
+                List<String> lore = new ArrayList<>();
+                lore.add(reached ? "<green>Reached." : "<gray>Reach level <white>" + lvl + "<gray>.");
+                List<String> rewards = levels.rewardBlurb(lvl);
+                if (!rewards.isEmpty()) { lore.add(""); lore.add("<gray>Pays:"); lore.addAll(rewards); }
+                inventory.setItem(slot, item(reached ? Material.LIME_STAINED_GLASS : Material.GRAY_STAINED_GLASS,
+                        (reached ? "<green>" : "<white>") + "Level " + lvl, lore));
+                lvl += every;
+            }
+        }
+
+        // ---- row 3: where to go
         inventory.setItem(TOP, item(Material.GOLD_INGOT, "<gold>Leaderboard",
-                List.of("<gray>Who's put the most hours in.", "", "<yellow>Click <gray>to see it")));
+                List.of("<gray>Who's put the most hours in.", "", "<yellow>Click <gray>to open")));
+
         boolean canPrestige = prof.level >= levels.maxLevel();
         inventory.setItem(PRESTIGE, item(canPrestige ? Material.NETHER_STAR : Material.GRAY_DYE,
-                (canPrestige ? "<gradient:#e08cff:#7de2ff>" : "<dark_gray>") + "Prestige" + (canPrestige ? "</gradient>" : ""),
+                (canPrestige ? "<gradient:#e08cff:#7de2ff>Prestige</gradient>" : "<dark_gray>Prestige"),
                 List.of("<gray>At level " + levels.maxLevel() + ", go round again:",
                         "<gray>back to 1, a permanent <white>★<gray>, a faster climb.",
                         "", canPrestige ? "<yellow>Click <gray>to prestige" : "<dark_gray>Not yet.")));
 
-        int every = levels.milestoneEvery();
-        int shown = 0;
-        int next = every <= 0 ? -1 : ((prof.level / every) + 1) * every;
-        for (int slot = NEXT_ROW_START; shown < 5 && next > 0 && next <= levels.maxLevel(); slot++, next += every) {
-            List<String> ml = new ArrayList<>();
-            ml.add("<gray>Reach level <white>" + next + "<gray>.");
-            List<String> rewards = levels.rewardBlurb(next);
-            if (!rewards.isEmpty()) {
-                ml.add("");
-                ml.add("<gray>Pays:");
-                ml.addAll(rewards);
-            }
-            boolean reached = prof.level >= next;
-            inventory.setItem(slot, item(reached ? Material.LIME_DYE : Material.GRAY_DYE,
-                    (reached ? "<green>" : "<white>") + "Level " + next + (reached ? " <dark_gray>(done)" : ""), ml));
-            shown++;
-        }
+        int daily = levels.dailyLeft(prof);
+        inventory.setItem(DAILY, item(daily > 0 ? Material.SUNFLOWER : Material.GRAY_DYE,
+                daily > 0 ? "<gold>Daily bonus" : "<dark_gray>Daily bonus",
+                List.of(daily > 0 ? "<gray>Your next <white>" + daily + "<gray> blocks pay extra." : "<gray>Used up for today.",
+                        "<dark_gray>Resets at midnight.")));
 
         fill(Material.BLACK_STAINED_GLASS_PANE);
     }
 
     @Override
     public void onClick(Player p, InventoryClickEvent e) {
-        if (e.getSlot() == TOP) new LevelTopGui(plugin).open(p);
-        if (e.getSlot() == PRESTIGE) {
-            p.closeInventory();
-            p.performCommand("level prestige");
+        switch (e.getSlot()) {
+            case TOP -> new LevelTopGui(plugin).open(p);
+            case PRESTIGE -> { p.closeInventory(); p.performCommand("level prestige"); }
+            default -> { }
         }
     }
 }

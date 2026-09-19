@@ -3,20 +3,15 @@ package me.catalysmrl.catamines.myst.dig;
 import me.catalysmrl.catamines.CataMines;
 import me.catalysmrl.catamines.api.events.CataMineBlockBreakEvent;
 import me.catalysmrl.catamines.api.events.CataMineResetEvent;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.entity.Player;
 
 /**
- * The one listener that feeds fossils, contributions, challenges, pickaxe
- * souls and the last-block bonus.
- *
- * Everything hangs off the mine's own break event so none of it fires
- * outside a mine, with fossils on the plain break event as well because a
- * fossil block is placed on top of the composition and might not belong to
- * it.
+ * The one listener feeding contributions, challenges, pickaxe souls and the
+ * last-block bonus. Everything hangs off the mine's own break event, so none
+ * of it fires outside a mine.
  */
 public class DigListener implements Listener {
 
@@ -34,25 +29,19 @@ public class DigListener implements Listener {
         plugin.getMineChallenges().record(p, e.getCataMine(), block);
 
         var pick = p.getInventory().getItemInMainHand();
-        if (plugin.getPickaxeSouls().hasSoul(pick))
-            plugin.getPickaxeSouls().onBreak(p, pick,
-                    plugin.getMineLevels().xpFor(e.getCataMine().getName(), block));
+        if (plugin.getPickaxeSouls().hasSoul(pick)) {
+            plugin.getPickaxeSouls().onBreak(p, pick, plugin.getMineLevels().xpFor(e.getCataMine().getName(), block));
+            // getItemInMainHand() can hand back a copy on newer Paper, in
+            // which case edits to it never reach the inventory — which is
+            // exactly why soul progress looked stuck. Put it back explicitly.
+            p.getInventory().setItemInMainHand(pick);
+        }
 
-        plugin.getFossils().checkLastBlock(p, e.getCataMine());
+        plugin.getLastBlock().check(p, e.getCataMine());
     }
 
-    /** Fossil blocks sit on top of the composition, so this is the plain event. */
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBreak(BlockBreakEvent e) {
-        plugin.getFossils().onBreak(e.getPlayer(), e.getBlock());
-    }
-
-    /** On reset: pay the board, then bury a new fossil. */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onReset(CataMineResetEvent e) {
         plugin.getContributions().onReset(e.getCataMine());
-        // a tick later, so the fossil is placed into the refilled mine
-        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin,
-                () -> plugin.getFossils().onReset(e.getCataMine()), 5L);
     }
 }
