@@ -106,8 +106,10 @@ public class MineEventCommand implements TabExecutor {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length > 0 && args[0].equalsIgnoreCase("event")) args = Arrays.copyOfRange(args, 1, args.length);
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] rawArgs) {
+        // A separate final variable, because the lambda below reads it.
+        final String[] args = rawArgs.length > 0 && rawArgs[0].equalsIgnoreCase("event")
+                ? Arrays.copyOfRange(rawArgs, 1, rawArgs.length) : rawArgs;
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
             for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "status", "challenges", "reload"))

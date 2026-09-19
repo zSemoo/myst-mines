@@ -239,8 +239,12 @@ public class MineLevels implements Listener {
     }
 
     private void playSound(Player p, String name, float pitch) {
+        // By key rather than enum constant: config names are "entity.player.levelup"
+        // style, and the enum lookup is deprecated for removal.
         try {
-            p.playSound(p.getLocation(), Sound.valueOf(name.toUpperCase(Locale.ROOT).replace('.', '_')), 1f, pitch);
+            var key = org.bukkit.NamespacedKey.minecraft(name.toLowerCase(Locale.ROOT).replace('_', '.'));
+            Sound sound = org.bukkit.Registry.SOUNDS.get(key);
+            if (sound != null) p.playSound(p.getLocation(), sound, 1f, pitch);
         } catch (IllegalArgumentException ignored) { }
     }
 
