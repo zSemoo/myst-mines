@@ -74,6 +74,8 @@ public class MineManager {
      * Returns how many mines came back, or -1 if the folder couldn't be read.
      */
     public int reload() {
+        // Events end first, so what gets saved is every mine's own blocks.
+        if (plugin.getMineEvents() != null) plugin.getMineEvents().stopAll();
         // Save first: a reload shouldn't cost anyone a mine they just edited
         // in game but hadn't saved.
         for (CataMine mine : mines) {
@@ -97,6 +99,7 @@ public class MineManager {
     }
 
     public void shutDown() {
+        if (plugin.getMineEvents() != null) plugin.getMineEvents().stopAll();
         blockApplicator.cancel();
         minesTask.cancel();
 
@@ -345,7 +348,10 @@ public class MineManager {
         Path file = plugin.getDataFolder().toPath().resolve("mines").resolve(mine.getName() + ".yml");
         FileConfiguration fileCfg = new YamlConfiguration();
 
-        mine.serialize(fileCfg);
+        // Never write a running event's blocks to disk as if they were the
+        // mine's own — see MineEvents.withOriginals.
+        if (plugin.getMineEvents() != null) plugin.getMineEvents().withOriginals(mine, () -> mine.serialize(fileCfg));
+        else mine.serialize(fileCfg);
 
         fileCfg.save(file.toFile());
     }

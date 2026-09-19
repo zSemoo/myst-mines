@@ -21,7 +21,9 @@ events:
     block: minecraft:diamond_block
     drop-multiplier: 1.0
     xp-multiplier: 1.0
-    broadcast: "<gradient:#7de2ff:#e08cff>✦ MINE PARTY in {mine} — {minutes} minutes of solid diamond!</gradient>"
+    # {block} is whatever the party is made of — the default here, or what
+    # was given on the command: /mine party king sponge 300
+    broadcast: "<gradient:#7de2ff:#e08cff>✦ MINE PARTY in {mine} — {minutes} minutes of solid {block}!</gradient>"
     title: "<gradient:#7de2ff:#e08cff><bold>MINE PARTY</bold></gradient>"
     subtitle: "<white>{mine} <gray>— get in there."
     end-broadcast: "<gray>The party in <white>{mine}<gray> is over."
@@ -32,7 +34,7 @@ events:
     percent: 12
     drop-multiplier: 1.0
     xp-multiplier: 1.5
-    broadcast: "<gradient:#ffd166:#ff8c00>✦ A GOLDEN VEIN runs through {mine} for {minutes} minutes.</gradient>"
+    broadcast: "<gradient:#ffd166:#ff8c00>✦ A VEIN of {block} runs through {mine} for {minutes} minutes.</gradient>"
     title: "<gradient:#ffd166:#ff8c00><bold>GOLDEN VEIN</bold></gradient>"
     subtitle: "<white>{mine} <gray>— follow the gold."
     end-broadcast: "<gray>The vein in <white>{mine}<gray> has run out."

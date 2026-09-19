@@ -54,6 +54,9 @@ public abstract class MystGui implements InventoryHolder, Listener {
     /** Override to react to a click; the click itself is always cancelled. */
     public void onClick(Player p, InventoryClickEvent e) { }
 
+    /** A click in the player's own inventory while this menu is open. */
+    public void onOwnInventoryClick(Player p, InventoryClickEvent e) { }
+
     // ------------------------------------------------------------------ items
 
     protected ItemStack item(Material material, String name, List<String> lore) {
@@ -90,8 +93,9 @@ public abstract class MystGui implements InventoryHolder, Listener {
         public void onClick(InventoryClickEvent e) {
             if (!(e.getInventory().getHolder() instanceof MystGui gui)) return;
             e.setCancelled(true);
-            if (e.getClickedInventory() != e.getInventory()) return;
-            if (e.getWhoClicked() instanceof Player p) gui.onClick(p, e);
+            if (!(e.getWhoClicked() instanceof Player p)) return;
+            if (e.getClickedInventory() == e.getInventory()) gui.onClick(p, e);
+            else if (e.getClickedInventory() == p.getInventory()) gui.onOwnInventoryClick(p, e);
         }
     }
 }

@@ -35,6 +35,7 @@ public class PickaxeSouls {
     private final CataMines plugin;
     private final NamespacedKey xpKey, levelKey, nameKey;
     private YamlConfiguration cfg;
+    private int breaksSinceRedraw;
 
     public PickaxeSouls(CataMines plugin) {
         this.plugin = plugin;
@@ -117,8 +118,11 @@ public class PickaxeSouls {
         pdc.set(levelKey, PersistentDataType.INTEGER, level);
         pick.setItemMeta(meta);
 
+        // Redraw the lore every few blocks, not only on a level: 250 blocks to
+        // the first level with no visible movement reads as "not working".
+        int every = Math.max(1, cfg.getInt("lore-refresh-every-blocks", 5));
+        if (gains > 0 || (++breaksSinceRedraw % every) == 0) describe(pick);
         if (gains > 0) {
-            describe(pick);
             String trait = traitAt(level);
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.4f);
             tell(p, cfg.getString("messages.soul-level", "<gradient:#7de2ff:#e08cff>The pick sharpens.</gradient> <gray>Soul level {level}.")

@@ -103,8 +103,8 @@ public class MineEditGui extends MystGui {
         }
 
         inventory.setItem(ADD, item(Material.LIME_DYE, "<green>Add a block",
-                List.of("<gray>Hold the block you want and click here.",
-                        "<gray>It's added at 0% — then raise it.")));
+                List.of("<gray>Click any block in your inventory below",
+                        "<gray>and it's added at 0% — then raise it.")));
 
         inventory.setItem(TELEPORT, item(Material.ENDER_PEARL, "<aqua>Teleport to the mine", List.of()));
 
@@ -181,28 +181,16 @@ public class MineEditGui extends MystGui {
                 if (e.isRightClick()) step = -step;
                 b.setChance(Math.max(0, Math.min(100, b.getChance() + step)));
             }
+            // The reset uses a precomputed pattern, not the list — without
+            // this, an edit shows in the menu and changes nothing in the mine.
+            comp.refreshPattern();
             save(p);
             refresh(p);
             return;
         }
 
         switch (slot) {
-            case ADD -> {
-                if (comp == null) return;
-                ItemStack held = p.getInventory().getItemInMainHand();
-                if (held == null || held.getType().isAir() || !held.getType().isBlock()) {
-                    p.sendMessage(MM.deserialize("<red>Hold the block you want to add."));
-                    return;
-                }
-                try {
-                    comp.getBlocks().add(new CataMineBlock("minecraft:" + held.getType().name().toLowerCase(), 0));
-                    save(p);
-                    p.playSound(p.getLocation(), Sound.BLOCK_STONE_PLACE, 0.8f, 1.2f);
-                } catch (Exception ex) {
-                    p.sendMessage(MM.deserialize("<red>Couldn't add that: " + ex.getMessage()));
-                }
-                refresh(p);
-            }
+            case ADD -> p.sendMessage(MM.deserialize("<gray>Click a block in your inventory to add it."));
             case TELEPORT -> {
                 p.closeInventory();
                 var at = mine.getFlags().getTeleportLocation();
@@ -259,6 +247,33 @@ public class MineEditGui extends MystGui {
         }
     }
 
+    /** Clicking a block in your own inventory adds it to the composition. */
+    @Override
+    public void onOwnInventoryClick(Player p, InventoryClickEvent e) {
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked == null || clicked.getType().isAir()) return;
+        if (!clicked.getType().isBlock()) {
+            p.sendMessage(MM.deserialize("<red>That isn't a block."));
+            return;
+        }
+        CataMineComposition comp = composition();
+        if (comp == null) return;
+        if (comp.getBlocks().size() >= BLOCK_SLOTS.length) {
+            p.sendMessage(MM.deserialize("<red>The mine already has " + BLOCK_SLOTS.length + " blocks."));
+            return;
+        }
+        try {
+            // addBlock replaces any existing entry for the same block, and
+            // rebuilds the pattern; the item stays in their inventory.
+            comp.addBlock(new CataMineBlock("minecraft:" + clicked.getType().name().toLowerCase(), 0));
+            save(p);
+            p.playSound(p.getLocation(), Sound.BLOCK_STONE_PLACE, 0.8f, 1.2f);
+        } catch (Exception ex) {
+            p.sendMessage(MM.deserialize("<red>Couldn't add that: " + ex.getMessage()));
+        }
+        refresh(p);
+    }
+
     private Optional<org.bukkit.Location> centre() {
         try {
             var region = mine.getRegionManager().getChoices().get(0);
@@ -278,6 +293,21 @@ public class MineEditGui extends MystGui {
 
     // ------------------------------------------------------------------ the countdown
 
+    /** Inside the mine's box, grown by `pad` blocks on every side. */
+    private static boolean nearMine(Player p, CataMine mine, int pad) {
+        try {
+            var region = mine.getRegionManager().getChoices().get(0);
+            if (!(region instanceof SelectionRegion sel)) return false;
+            var r = sel.getRegion();
+            if (!p.getWorld().getName().equals(r.getWorld().getName())) return false;
+            var min = r.getMinimumPoint(); var max = r.getMaximumPoint();
+            var l = p.getLocation();
+            return l.getBlockX() >= min.x() - pad && l.getBlockX() <= max.x() + pad
+                    && l.getBlockY() >= min.y() - pad && l.getBlockY() <= max.y() + pad
+                    && l.getBlockZ() >= min.z() - pad && l.getBlockZ() <= max.z() + pad;
+        } catch (RuntimeException ex) { return false; }
+    }
+
     /** Ticked every second: anyone watching a mine sees its timer. */
     public static void tickCountdowns(CataMines plugin) {
         if (watching.isEmpty()) return;
@@ -287,6 +317,9 @@ public class MineEditGui extends MystGui {
             if (p == null || name == null) { watching.remove(id); continue; }
             CataMine mine = plugin.getMineManager().getMine(name).orElse(null);
             if (mine == null) { watching.remove(id); continue; }
+            // Only shown while you're at the mine — a block inside its
+            // bounds counts, so standing on the rim still shows it.
+            if (!nearMine(p, mine, 1)) continue;
             CataMineController c = mine.getController();
             String text = mine.getFlags().isStopped() ? "<red>" + name + " is disabled"
                     : "<gold>" + name + " <gray>resets in <white>" + Math.max(0, c.getCountdown()) + "s";

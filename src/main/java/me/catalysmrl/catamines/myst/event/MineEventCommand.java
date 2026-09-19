@@ -51,7 +51,8 @@ public class MineEventCommand implements TabExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("event")) args = Arrays.copyOfRange(args, 1, args.length);
 
         if (args.length == 0) {
-            tell(sender, "<gold>/mine party|vein|rush|double|meteor <mine> [seconds]");
+            tell(sender, "<gold>/mine party|vein <mine> [block] [seconds]");
+            tell(sender, "<gold>/mine rush|double|meteor <mine> [seconds]");
             tell(sender, "<gold>/mine stop <mine> <dark_gray>| <gold>status <dark_gray>| <gold>challenges");
             return true;
         }
@@ -79,9 +80,7 @@ public class MineEventCommand implements TabExecutor {
             case "stop" -> {
                 if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
                 if (args.length < 2) { tell(sender, "<red>/mine stop <mine>"); return true; }
-                if (events.running(args[1]) == null) { tell(sender, "<gray>Nothing running in " + args[1] + "."); return true; }
-                events.stop(args[1]);
-                tell(sender, "<green>Stopped.");
+                tell(sender, events.stop(args[1]) ? "<green>Stopped and restored." : "<gray>Nothing running in " + args[1] + ".");
             }
             case "reload" -> {
                 if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
@@ -98,8 +97,17 @@ public class MineEventCommand implements TabExecutor {
                 CataMine mine = plugin.getMineManager().getMine(args[1]).orElse(null);
                 if (mine == null) { tell(sender, "<red>No mine called " + args[1] + "."); return true; }
                 int seconds = 0;
-                if (args.length > 2) try { seconds = Integer.parseInt(args[2]); } catch (NumberFormatException ignored) { }
-                events.start(kind, mine, seconds, msg -> tell(sender, msg));
+                String block = null;
+                if (args.length > 2) {
+                    try { seconds = Integer.parseInt(args[2]); }
+                    catch (NumberFormatException e) {
+                        // not a number: treat it as the block for a party or vein
+                        if (kind == MineEvents.Kind.PARTY || kind == MineEvents.Kind.GOLDEN_VEIN) block = args[2];
+                        else { tell(sender, "<red>'" + args[2] + "' isn't a number of seconds."); return true; }
+                    }
+                }
+                if (args.length > 3) try { seconds = Integer.parseInt(args[3]); } catch (NumberFormatException ignored) { }
+                events.start(kind, mine, seconds, block, msg -> tell(sender, msg));
             }
         }
         return true;

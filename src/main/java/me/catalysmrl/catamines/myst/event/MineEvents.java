@@ -94,6 +94,11 @@ public class MineEvents {
     // ------------------------------------------------------------------ starting
 
     public boolean start(Kind kind, CataMine mine, int seconds, CommandSenderLike by) {
+        return start(kind, mine, seconds, null, by);
+    }
+
+    /** With a block override, for a party or vein of something other than the config's default. */
+    public boolean start(Kind kind, CataMine mine, int seconds, String blockOverride, CommandSenderLike by) {
         if (mine == null) return false;
         String key = mine.getName().toLowerCase();
         if (running(key) != null) {
@@ -112,8 +117,8 @@ public class MineEvents {
         running.put(key, a);
 
         switch (kind) {
-            case PARTY -> paint(mine, cfg.getString(path + "block", "minecraft:diamond_block"), 100, a);
-            case GOLDEN_VEIN -> paint(mine, cfg.getString(path + "block", "minecraft:gold_block"),
+            case PARTY -> paint(mine, blockOf(blockOverride, cfg.getString(path + "block", "minecraft:diamond_block")), 100, a);
+            case GOLDEN_VEIN -> paint(mine, blockOf(blockOverride, cfg.getString(path + "block", "minecraft:gold_block")),
                     cfg.getDouble(path + "percent", 12), a);
             case RUSH -> {
                 a.previousDelay = mine.getController().getResetDelay();
@@ -124,8 +129,16 @@ public class MineEvents {
             case METEOR -> dropMeteor(mine, a, path);
         }
 
-        announce(kind, mine, seconds, path);
+        announce(kind, mine, seconds, path, blockOf(blockOverride,
+                cfg.getString(path + "block", kind == Kind.GOLDEN_VEIN ? "minecraft:gold_block" : "minecraft:diamond_block")));
         return true;
+    }
+
+    /** "sponge" -> "minecraft:sponge"; null -> the default. */
+    private static String blockOf(String override, String def) {
+        if (override == null || override.isBlank()) return def;
+        String b = override.toLowerCase(Locale.ROOT);
+        return b.contains(":") ? b : "minecraft:" + b;
     }
 
     /**
@@ -150,15 +163,20 @@ public class MineEvents {
                     // back exactly; nothing is read from or written to disk.
                     a.saved.put(comp, new ArrayList<>(blocks));
                     blocks.forEach(b -> a.savedChances.put(b, b.getChance()));
+                    List<me.catalysmrl.catamines.mine.components.composition.CataMineBlock> painted = new ArrayList<>();
                     if (percent >= 100) {
-                        blocks.clear();
-                        blocks.add(new me.catalysmrl.catamines.mine.components.composition.CataMineBlock(block, 100));
+                        painted.add(new me.catalysmrl.catamines.mine.components.composition.CataMineBlock(block, 100));
                     } else {
                         // Squeeze the mine's own blocks down to make room for
                         // the vein; stop() puts every chance back.
                         blocks.forEach(b -> b.setChance(b.getChance() * (100 - percent) / 100));
-                        blocks.add(new me.catalysmrl.catamines.mine.components.composition.CataMineBlock(block, percent));
+                        painted.addAll(blocks);
+                        painted.add(new me.catalysmrl.catamines.mine.components.composition.CataMineBlock(block, percent));
                     }
+                    // setBlocks rebuilds the reset pattern; editing the list
+                    // in place does not, which is why a party reset to
+                    // exactly what it was before.
+                    comp.setBlocks(painted);
                 }));
             mine.reset(plugin);
         } catch (Exception ex) {
@@ -226,23 +244,62 @@ public class MineEvents {
 
     // ------------------------------------------------------------------ ending
 
-    public void stop(String mine) {
+    public boolean stop(String mine) {
         Active a = running.remove(mine.toLowerCase());
-        if (a == null) return;
+        if (a == null) return false;
         CataMine m = plugin.getMineManager().getMine(a.mine).orElse(null);
-        if (m == null) return;
+        if (m == null) {
+            plugin.getLogger().warning("Event " + a.kind + " was running in '" + a.mine + "' but that mine no longer exists; couldn't restore it.");
+            return false;
+        }
         if (a.kind == Kind.RUSH && a.previousDelay >= 0) m.getController().setResetDelay(a.previousDelay);
         // Put back exactly what each composition held, so a party or a vein
         // leaves nothing behind and nothing has to be reloaded from disk.
-        a.saved.forEach((comp, before) -> {
-            comp.getBlocks().clear();
-            comp.getBlocks().addAll(before);
-        });
         a.savedChances.forEach(me.catalysmrl.catamines.mine.components.composition.CataMineBlock::setChance);
+        a.saved.forEach((comp, before) -> comp.setBlocks(new ArrayList<>(before)));
         m.reset(plugin);
+        plugin.getLogger().info("Event " + a.kind + " ended in " + a.mine + "; composition restored ("
+                + a.saved.size() + " composition(s)).");
         Bukkit.broadcast(MM.deserialize(cfg.getString("events." + a.kind.name().toLowerCase() + ".end-broadcast",
                 "<gray>The {kind} in <white>{mine}<gray> is over.")
                 .replace("{kind}", pretty(a.kind)).replace("{mine}", a.mine)));
+        return true;
+    }
+
+    /** Ends every running event, restoring each mine. Used before reload and shutdown. */
+    public void stopAll() {
+        for (Active a : new ArrayList<>(running.values())) stop(a.mine);
+    }
+
+    /**
+     * Runs something with the mine's ORIGINAL composition in place.
+     *
+     * A save during a party would otherwise write the painted blocks to disk
+     * as the mine's real composition, and the originals would be gone for
+     * good. So a save swaps the originals back in, writes, and re-applies
+     * the event — the file on disk never sees a party.
+     */
+    public void withOriginals(CataMine mine, Runnable action) {
+        Active a = mine == null ? null : running(mine.getName());
+        if (a == null || a.saved.isEmpty()) { action.run(); return; }
+        // snapshot what the event currently has in place
+        Map<me.catalysmrl.catamines.mine.components.composition.CataMineComposition,
+                List<me.catalysmrl.catamines.mine.components.composition.CataMineBlock>> painted = new HashMap<>();
+        a.saved.forEach((comp, before) -> {
+            painted.put(comp, new ArrayList<>(comp.getBlocks()));
+            comp.setBlocks(new ArrayList<>(before));
+        });
+        a.savedChances.forEach(me.catalysmrl.catamines.mine.components.composition.CataMineBlock::setChance);
+        try {
+            action.run();
+        } finally {
+            painted.forEach((comp, during) -> comp.setBlocks(new ArrayList<>(during)));
+            // the squeezed chances of a vein have to come back too
+            if (a.kind == Kind.GOLDEN_VEIN) {
+                double percent = cfg.getDouble("events.golden_vein.percent", 12);
+                a.savedChances.forEach((b, original) -> b.setChance(original * (100 - percent) / 100));
+            }
+        }
     }
 
     /** Ticked every second. */
@@ -254,10 +311,12 @@ public class MineEvents {
 
     // ------------------------------------------------------------------ chrome
 
-    private void announce(Kind kind, CataMine mine, int seconds, String path) {
+    private void announce(Kind kind, CataMine mine, int seconds, String path, String block) {
+        String blockName = block.replace("minecraft:", "").replace('_', ' ');
         String broadcast = cfg.getString(path + "broadcast",
                 "<gradient:#ffd166:#ff8c00>✦ {kind} in {mine} for {minutes} minutes!</gradient>");
         Bukkit.broadcast(MM.deserialize(broadcast
+                .replace("{block}", blockName)
                 .replace("{kind}", pretty(kind))
                 .replace("{mine}", mine.getDisplayName() == null ? mine.getName() : mine.getDisplayName())
                 .replace("{minutes}", String.valueOf(Math.max(1, seconds / 60)))

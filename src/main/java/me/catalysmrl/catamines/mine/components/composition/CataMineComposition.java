@@ -62,6 +62,15 @@ public class CataMineComposition
         updateRandomPattern();
     }
 
+    /**
+     * Rebuilds the reset pattern from the block list.
+     *
+     * The list can be edited in place (chances changed, blocks swapped)
+     * without the pattern knowing, and a reset uses the PATTERN — so an
+     * edit that doesn't call this changes the menu and nothing else.
+     */
+    public void refreshPattern() { updateRandomPattern(); }
+
     private void updateRandomPattern() {
         randomPattern = new RandomPattern();
         blocks.stream()

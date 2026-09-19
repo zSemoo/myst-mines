@@ -143,6 +143,9 @@ public final class CataMines extends JavaPlugin {
         pm.registerEvents(mineLevels, this);
         pm.registerEvents(new me.catalysmrl.catamines.myst.level.MineGateListener(this), this);
         pm.registerEvents(new me.catalysmrl.catamines.myst.dig.DigListener(this), this);
+        var resetListener = new me.catalysmrl.catamines.myst.dig.ResetListener(this);
+        pm.registerEvents(resetListener, this);
+        getServer().getScheduler().runTaskTimer(this, resetListener::tick, 20L, 20L);
         getServer().getScheduler().runTaskTimer(this, () -> {
             contributions.save();
             mineChallenges.save();
