@@ -93,6 +93,14 @@ an event, so a restart mid-event costs at most one reset.
   the week number so everyone sees the same one. Mine-specific, which gives
   the lower mines a reason to exist after you've outgrown them.
 
+### Reload
+Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
+implemented now: running tasks stopped, current mines saved (so an in-game
+edit isn't lost), the list cleared, everything read fresh from disk and
+restarted. It reloads every added config too, so one command covers the lot.
+`/level reload`, `/mine reload` and `/pick reload` still work for their own
+files.
+
 ## Config migration
 The fourteen live mines were CataMines **2.x** format
 (`de.c4t4lysm...CuboidCataMine`) and 3.0 uses a completely different

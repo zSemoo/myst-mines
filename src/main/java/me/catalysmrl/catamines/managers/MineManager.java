@@ -62,6 +62,40 @@ public class MineManager {
         initMineTask();
     }
 
+    /**
+     * Reloads every mine from disk.
+     *
+     * Mines hold live state — a running controller, a region with a
+     * composition mid-rotation, a queued block application — so this can't
+     * just re-read the files on top of what's there. The running tasks are
+     * stopped, the current mines are saved (so nothing in memory is lost),
+     * the list is emptied, and everything is read fresh and started again.
+     *
+     * Returns how many mines came back, or -1 if the folder couldn't be read.
+     */
+    public int reload() {
+        // Save first: a reload shouldn't cost anyone a mine they just edited
+        // in game but hadn't saved.
+        for (CataMine mine : mines) {
+            try { saveMine(mine); } catch (IOException e) {
+                plugin.getLogger().warning("Couldn't save " + mine.getName() + " before reloading: " + e.getMessage());
+            }
+        }
+        if (blockApplicator != null) blockApplicator.cancel();
+        if (minesTask != null) minesTask.cancel();
+        mines.clear();
+
+        try {
+            loadMinesFromFolder(minesPath);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Couldn't reload the mines folder: " + e.getMessage());
+            start();                                  // get the tasks running again regardless
+            return -1;
+        }
+        start();
+        return mines.size();
+    }
+
     public void shutDown() {
         blockApplicator.cancel();
         minesTask.cancel();

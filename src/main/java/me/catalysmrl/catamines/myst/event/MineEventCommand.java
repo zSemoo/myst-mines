@@ -73,8 +73,11 @@ public class MineEventCommand implements TabExecutor {
                 tell(sender, "<green>Stopped.");
             }
             case "reload" -> {
-                events.reload(); plugin.getBoards().reload(); plugin.getSouls().reload(); plugin.getExtras().reload();
-                tell(sender, "<green>events, boards, souls and extras reloaded.");
+                events.reload();
+                plugin.getFossils().reload();
+                plugin.getContributions().reload();
+                plugin.getPickaxeSouls().reload();
+                tell(sender, "<green>Reloaded events, digging and souls configs.");
             }
             case "board" -> {
                 // /mine board <mine>       place the live top-three hologram where you stand

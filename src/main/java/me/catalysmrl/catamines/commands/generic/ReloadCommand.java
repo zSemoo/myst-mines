@@ -18,7 +18,22 @@ public class ReloadCommand extends AbstractCommand {
     @Override
     public void execute(CataMines plugin, CommandSender sender, CommandContext ctx) throws CommandException {
         assertArgLength(ctx);
-        Messages.sendPrefixed(sender, "&cNot supported yet!");
+        // Everything the fork added reads its own file, so each gets a nudge
+        // alongside the mines themselves.
+        int loaded = plugin.getMineManager().reload();
+        plugin.reloadConfig();
+        plugin.getMineLevels().reload();
+        plugin.getMineEvents().reload();
+        plugin.getFossils().reload();
+        plugin.getContributions().reload();
+        plugin.getMineChallenges().reload();
+        plugin.getPickaxeSouls().reload();
+
+        if (loaded < 0) {
+            Messages.sendPrefixed(sender, "&cThe mines folder couldn't be read — check the console.");
+            return;
+        }
+        Messages.sendPrefixed(sender, "&aReloaded &f" + loaded + "&a mine(s) and every config.");
     }
 
     @Override
