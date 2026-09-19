@@ -3,6 +3,7 @@ package me.catalysmrl.catamines.myst.pick;
 import me.catalysmrl.catamines.CataMines;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -177,7 +178,26 @@ public class PickaxeSouls {
 
     // ------------------------------------------------------------------ the lore
 
-    /** Rewrites the pick's lore so its soul is visible on the item. */
+    /**
+     * An invisible mark on every line the soul writes.
+     *
+     * The soul's lore used to be written wholesale, which wiped whatever
+     * else was on the item — a custom enchant's lines, most obviously. Each
+     * soul line now starts with a zero-width space, so a rebuild can remove
+     * exactly its own lines and leave everyone else's alone, wherever they
+     * sit in the list.
+     */
+    private static final String MARK = "\u200B";
+
+    private Component soulLine(String miniMessage) {
+        return MM.deserialize("<!italic>" + MARK + miniMessage);
+    }
+
+    private static boolean isSoulLine(Component line) {
+        return PlainTextComponentSerializer.plainText().serialize(line).startsWith(MARK);
+    }
+
+    /** Rewrites the soul's own lore lines, leaving every other line untouched. */
     public void describe(ItemStack pick) {
         if (!hasSoul(pick)) return;
         var meta = pick.getItemMeta();
@@ -186,21 +206,32 @@ public class PickaxeSouls {
         long need = xpForNext(level);
         String owner = meta.getPersistentDataContainer().getOrDefault(nameKey, PersistentDataType.STRING, "?");
 
+        // whatever else is on the item, in its original order
         List<Component> lore = new ArrayList<>();
-        lore.add(MM.deserialize("<!italic><gradient:#7de2ff:#e08cff>Souled Pickaxe</gradient> <dark_gray>lv" + level));
-        lore.add(MM.deserialize("<!italic><gray>" + bar(level >= maxLevel() ? 1 : xp / need)
+        if (meta.lore() != null) for (Component line : meta.lore()) if (!isSoulLine(line)) lore.add(line);
+
+        // drop a trailing blank left behind by the block we just removed
+        // Only the item's own trailing blanks — our marked lines are gone
+        // by this point, so anything blank here belongs to someone else.
+        while (!lore.isEmpty() && PlainTextComponentSerializer.plainText()
+                .serialize(lore.get(lore.size() - 1)).trim().isEmpty())
+            lore.remove(lore.size() - 1);
+        if (!lore.isEmpty()) lore.add(soulLine(" "));
+
+        lore.add(soulLine("<gradient:#7de2ff:#e08cff>Souled Pickaxe</gradient> <dark_gray>lv" + level));
+        lore.add(soulLine("<gray>" + bar(level >= maxLevel() ? 1 : xp / need)
                 + " <dark_gray>" + (long) xp + "/" + (level >= maxLevel() ? "max" : String.valueOf(need))));
-        lore.add(Component.empty());
+        lore.add(soulLine(" "));
         ConfigurationSection traits = cfg.getConfigurationSection("traits");
         if (traits != null) for (String k : traits.getKeys(false)) {
             int at = traits.getInt(k + ".level", 999);
             boolean got = level >= at;
-            lore.add(MM.deserialize("<!italic>" + (got ? "<green>✔ " : "<dark_gray>✘ ")
+            lore.add(soulLine((got ? "<green>✔ " : "<dark_gray>✘ ")
                     + (got ? "<white>" : "<dark_gray>") + traits.getString(k + ".name", k)
                     + (got ? "" : " <dark_gray>(lv" + at + ")")));
         }
-        lore.add(Component.empty());
-        lore.add(MM.deserialize("<!italic><dark_gray>Woken by " + owner));
+        lore.add(soulLine(" "));
+        lore.add(soulLine("<dark_gray>Woken by " + owner));
         meta.lore(lore);
         pick.setItemMeta(meta);
     }
