@@ -56,6 +56,9 @@ bar-char: "|"
 bar-filled-colour: "<green>"
 bar-empty-colour: "<dark_gray>"
 
+# Every level-up is announced server-wide; milestones get a louder line.
+announce-every-level: true
+
 # Every Nth level is a milestone: broadcast, firework, bigger reward.
 milestone-every: 10
 milestone-firework: true
@@ -68,13 +71,72 @@ title:
 sounds:
   level-up: entity.player.levelup
   milestone: ui.toast.challenge_complete
+  prestige: ui.toast.challenge_complete
+
+# ---------------------------------------------------------------- daily bonus
+# The first N blocks each day pay extra. Cheap, and it gets people into a
+# mine every day.
+daily:
+  enabled: true
+  blocks: 100
+  multiplier: 3
+
+# ---------------------------------------------------------------- titles
+# A DeluxeTags tag per level threshold, handed over as a permission. A player
+# holds exactly one mining tag at a time — the previous one is taken away
+# when the next is earned. Make the tags in DeluxeTags first; these are the
+# tag NAMES, not display text.
+titles-enabled: true
+title-permission: "deluxetags.tag.{tag}"
+title-grant-command: "lp user {player} permission set {permission} true"
+title-revoke-command: "lp user {player} permission unset {permission}"
+titles:
+  1: apprentice
+  10: digger
+  25: prospector
+  50: foreman
+  75: mastermine
+  100: legend
+
+# ---------------------------------------------------------------- gates
+# A mine that only opens at a mining level. Below it you can walk in and
+# look; you just can't break anything. Prestiged players pass every gate.
+# mystmines.gate.bypass skips it.
+gates:
+  apprentice: 5
+  clergy: 12
+  Knight: 20
+  lord: 30
+  duke: 45
+  king: 60
+
+# ---------------------------------------------------------------- prestige
+# At max level, go round again: back to 1, a permanent star, and every
+# prestige makes the next climb this much quicker.
+prestige:
+  max: 10
+  star: "★"
+  xp-bonus-per-prestige: 0.05
+  commands:
+    - "crazyvouchers give {player} legendary-key 5"
+    - "eco give {player} 250000"
 
 messages:
   level-title: "<gradient:#ffd166:#ff8c00><bold>LEVEL {level}</bold></gradient>"
   level-subtitle: "<gray>Keep swinging."
   milestone-title: "<gradient:#7de2ff:#e08cff><bold>LEVEL {level}</bold></gradient>"
   milestone-subtitle: "<white>A milestone. Check your inventory."
+  level-broadcast: "<gray>{player} reached mining level <white>{level}<gray>."
   milestone-broadcast: "<gradient:#ffd166:#ff8c00>✦ {player} reached mining level {level}.</gradient>"
+  daily-start: "<gradient:#ffd166:#ff8c00>✦ Daily bonus:</gradient> <gray>your first {blocks} blocks today pay {times}× xp."
+  daily-done: "<gray>Daily bonus used up. <dark_gray>Back tomorrow."
+  title-earned: "<gradient:#ffd166:#ff8c00>✦ New title:</gradient> <white>{tag}</white> <dark_gray>— /tags to wear it"
+  gate-denied: "<red>This mine opens at mining level <white>{gate}<red>. <gray>You're level {level}."
+  prestige-not-yet: "<red>You need level {max} to prestige. <gray>You're level {level}."
+  prestige-maxed: "<gray>That's as far as it goes."
+  prestige-title: "<gradient:#e08cff:#7de2ff><bold>PRESTIGE {prestige}</bold></gradient>"
+  prestige-subtitle: "<gray>Back to one. Faster this time."
+  prestige-broadcast: "<gradient:#e08cff:#7de2ff>★ {player} has prestiged their mining — prestige {prestige}.</gradient>"
   action-bar: "<gray>Level <white>{level} <dark_gray>{bar} <gray>{xp}<dark_gray>/{next}"
 
 # Console commands. {player} and {level}.

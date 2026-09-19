@@ -1,0 +1,33 @@
+# ===========================================================================
+# CONTRIBUTION BOARDS — who did the work this reset.
+#
+# Every mine counts blocks per player since its last refill. On reset the
+# board closes: top three announced, the winner paid, the LAST block before
+# the reset paid too. Then it clears, so a new player can win the next one.
+#
+# /mine board <mine>          a live hologram of the top three, where you stand
+# /mine board <mine> remove
+# ===========================================================================
+
+# A reset with fewer than this many blocks broken in total is ignored, so a
+# mine nobody touched doesn't announce a winner with 3 blocks.
+minimum-blocks-to-count: 50
+
+# {player} {mine} {blocks}
+winner-commands:
+  - "eco give {player} 5000"
+
+last-block:
+  enabled: true
+  commands:
+    - "eco give {player} 2500"
+
+hologram:
+  header: "<gradient:#ffd166:#ff8c00><bold>{mine}</bold></gradient> <gray>this reset"
+  rows: 3
+  empty: "<dark_gray>Nobody yet. Be first."
+
+messages:
+  closed: "<gradient:#ffd166:#ff8c00>⛏ {mine} reset</gradient> <gray>— top diggers: {top}"
+  you-won: "<gradient:#ffd166:#ff8c00>✦ You out-dug everyone in {mine} this reset.</gradient>"
+  last-block: "<gradient:#8cff9e:#1fbf5a>⛏ {player} broke the last block in {mine}.</gradient>"

@@ -84,6 +84,16 @@ public class LevelCommand implements TabExecutor {
                 levels.reset(target.getUniqueId());
                 tell(sender, "<green>" + target.getName() + " is back to level 1.");
             }
+            case "prestige" -> {
+                if (!(sender instanceof Player p)) { tell(sender, "<red>Players only."); return true; }
+                if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
+                    MineLevels.Profile prof = levels.profile(p);
+                    tell(sender, "<gray>Prestige resets you to level 1 for a permanent <white>" + levels.stars(prof)
+                            + "★<gray> and a faster climb. <white>/level prestige confirm");
+                    return true;
+                }
+                levels.prestige(p);
+            }
             case "reload" -> {
                 if (!sender.hasPermission("mystmines.level.admin")) { tell(sender, "<red>No."); return true; }
                 levels.reload();
@@ -100,7 +110,7 @@ public class LevelCommand implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
-            List<String> subs = new ArrayList<>(List.of("top"));
+            List<String> subs = new ArrayList<>(List.of("top", "prestige"));
             if (sender.hasPermission("mystmines.level.admin")) subs.addAll(List.of("set", "give", "reset", "check", "reload"));
             for (String s : subs) if (s.startsWith(args[0].toLowerCase())) out.add(s);
         } else if (args.length == 2 && !args[0].equalsIgnoreCase("top")) {

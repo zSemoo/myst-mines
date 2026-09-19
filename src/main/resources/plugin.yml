@@ -13,6 +13,10 @@ commands:
     description: Your mining level
     aliases: [ "levels", "mininglevel", "ml" ]
     usage: /level [top]
+  pick:
+    description: Your pickaxe's soul
+    aliases: [ "pickaxe", "soul" ]
+    usage: /pick [awaken]
   mine:
     description: Mine events
     aliases: [ "mines", "mineevent" ]
@@ -28,6 +32,15 @@ permissions:
     default: op
   mystmines.level.admin:
     description: Set, give and reset mining levels
+    default: op
+  mystmines.souls.awaken:
+    description: Wake a soul in a pickaxe
+    default: true
+  mystmines.souls.admin:
+    description: Manage pickaxe souls
+    default: op
+  mystmines.gate.bypass:
+    description: Mine anywhere regardless of level gates
     default: op
   mystmines.level.exempt:
     description: Earns no mining xp (staff in creative, etc)

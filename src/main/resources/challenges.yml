@@ -1,0 +1,88 @@
+# ===========================================================================
+# WEEKLY MINE CHALLENGES
+#
+# One challenge per mine per week, picked by the week number so everyone
+# sees the same one and they rotate predictably. Progress is per player and
+# resets when the week turns.
+#
+# Challenges are mine-specific on purpose: it gives the lower mines a reason
+# to exist after you've outgrown them.
+#
+#   block: a material name, or "any"
+# ===========================================================================
+
+enabled: true
+announce: true
+
+messages:
+  progress: "<gray>{name} <dark_gray>{progress}/{amount}"
+  done: "<gradient:#8cff9e:#1fbf5a>✦ Challenge done:</gradient> <white>{name}"
+  broadcast: "<gray>{player} finished this week's <white>{name}<gray>."
+
+challenges:
+
+  peasant:
+    honest_work:
+      name: "Honest Work — 500 blocks in peasant"
+      block: any
+      amount: 500
+      rewards:
+        - "eco give {player} 15000"
+    coal_run:
+      name: "Coal Run — 250 coal in peasant"
+      block: coal_ore
+      amount: 250
+      rewards:
+        - "eco give {player} 20000"
+
+  apprentice:
+    the_grind:
+      name: "The Grind — 800 blocks in apprentice"
+      block: any
+      amount: 800
+      rewards:
+        - "eco give {player} 40000"
+        - "crazyvouchers give {player} rare-key 1"
+
+  clergy:
+    iron_will:
+      name: "Iron Will — 400 iron in clergy"
+      block: iron_ore
+      amount: 400
+      rewards:
+        - "eco give {player} 60000"
+
+  Knight:
+    gold_rush:
+      name: "Gold Rush — 300 gold in Knight"
+      block: gold_ore
+      amount: 300
+      rewards:
+        - "eco give {player} 90000"
+        - "crazyvouchers give {player} rare-key 2"
+
+  lord:
+    deep_pockets:
+      name: "Deep Pockets — 1,500 blocks in lord"
+      block: any
+      amount: 1500
+      rewards:
+        - "eco give {player} 150000"
+
+  duke:
+    diamond_hands:
+      name: "Diamond Hands — 200 diamond in duke"
+      block: diamond_ore
+      amount: 200
+      rewards:
+        - "eco give {player} 250000"
+        - "crazyvouchers give {player} legendary-key 1"
+
+  king:
+    the_crown:
+      name: "The Crown — 150 emerald in king"
+      block: emerald_ore
+      amount: 150
+      rewards:
+        - "eco give {player} 400000"
+        - "crazyvouchers give {player} legendary-key 2"

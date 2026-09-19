@@ -36,7 +36,7 @@ public class LevelTopGui extends MystGui {
         for (int i = 0; i < PODIUM.length && i < top.size(); i++) {
             MineLevels.Profile prof = top.get(i);
             inventory.setItem(PODIUM[i], head(levels.offline(prof),
-                    place[i] + " <white>" + prof.name,
+                    place[i] + " <white>" + prof.name + (prof.prestige > 0 ? " <gradient:#e08cff:#7de2ff>" + levels.stars(prof) + "</gradient>" : ""),
                     List.of("<gray>Level <white>" + prof.level,
                             levels.bar(levels.progress(prof)),
                             "<gray>Blocks mined: <white>" + prof.blocks)));
@@ -44,7 +44,7 @@ public class LevelTopGui extends MystGui {
         for (int i = PODIUM.length; i < top.size() && i - PODIUM.length < REST.length; i++) {
             MineLevels.Profile prof = top.get(i);
             inventory.setItem(REST[i - PODIUM.length], head(levels.offline(prof),
-                    "<gray>#" + (i + 1) + " <white>" + prof.name,
+                    "<gray>#" + (i + 1) + " <white>" + prof.name + (prof.prestige > 0 ? " <gradient:#e08cff:#7de2ff>" + levels.stars(prof) + "</gradient>" : ""),
                     List.of("<gray>Level <white>" + prof.level,
                             "<gray>Blocks mined: <white>" + prof.blocks)));
         }

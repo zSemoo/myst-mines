@@ -69,6 +69,9 @@ public class SelectionRegion extends AbstractCataMineRegion implements Cloneable
         return RegionType.SELECTION;
     }
 
+    /** The WorldEdit region itself. Added for the MystCity features. */
+    public Region getRegion() { return region; }
+
     @Override
     public long getVolume() {
         return region.getVolume();

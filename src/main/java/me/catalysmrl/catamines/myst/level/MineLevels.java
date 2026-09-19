@@ -42,6 +42,13 @@ public class MineLevels implements Listener {
         public int level = 1;
         public double xp;
         public long blocks;
+        /** Times they've gone round the ladder. */
+        public int prestige;
+        /** For the daily bonus: which day it was last counted, and how many blocks so far that day. */
+        public String bonusDay = "";
+        public int bonusBlocks;
+        /** The tag currently held for their level, so it can be swapped rather than stacked. */
+        public String heldTag = "";
         public Profile(UUID id) { this.id = id; }
     }
 
@@ -69,6 +76,13 @@ public class MineLevels implements Listener {
     }
 
     public boolean enabled() { return cfg.getBoolean("enabled", true); }
+    public String message(String key, String def) { return cfg.getString("messages." + key, def); }
+    public int gateFor(String mine) {
+        var gates = cfg.getConfigurationSection("gates");
+        if (gates == null || mine == null) return 0;
+        for (String k : gates.getKeys(false)) if (k.equalsIgnoreCase(mine)) return gates.getInt(k);
+        return 0;
+    }
     public int maxLevel() { return cfg.getInt("max-level", 100); }
 
     /** XP needed to get from this level to the next. */
@@ -106,7 +120,8 @@ public class MineLevels implements Listener {
     /** Everyone, best first. */
     public List<Profile> top(int limit) {
         List<Profile> all = new ArrayList<>(profiles.values());
-        all.sort((a, b) -> a.level != b.level ? Integer.compare(b.level, a.level) : Double.compare(b.xp, a.xp));
+        all.sort((a, b) -> a.prestige != b.prestige ? Integer.compare(b.prestige, a.prestige)
+                : a.level != b.level ? Integer.compare(b.level, a.level) : Double.compare(b.xp, a.xp));
         return all.size() > limit ? new ArrayList<>(all.subList(0, limit)) : all;
     }
 
@@ -138,10 +153,17 @@ public class MineLevels implements Listener {
     public void give(Player p, double amount, boolean countBlock) {
         if (amount <= 0) return;
         Profile prof = profile(p);
-        if (countBlock) prof.blocks++;
+        if (countBlock) {
+            prof.blocks++;
+            amount *= dailyMultiplier(prof);
+        }
+        // Each prestige makes the next climb a little quicker.
+        amount *= 1 + prof.prestige * cfg.getDouble("prestige.xp-bonus-per-prestige", 0.05);
         prof.xp += amount;
         dirty = true;
 
+        // The level-1 title is earned by showing up, not by levelling.
+        if (prof.heldTag.isBlank()) updateTitle(p, prof);
         while (prof.level < maxLevel() && prof.xp >= xpForNext(prof.level)) {
             prof.xp -= xpForNext(prof.level);
             prof.level++;
@@ -176,6 +198,13 @@ public class MineLevels implements Listener {
         playSound(p, cfg.getString(milestone ? "sounds.milestone" : "sounds.level-up", "entity.player.levelup"),
                 milestone ? 1.2f : 1f);
 
+        // Every level goes out server-wide (cheap to switch off); milestones
+        // get their own, louder line on top.
+        if (cfg.getBoolean("announce-every-level", true) && !milestone)
+            Bukkit.broadcast(MM.deserialize(cfg.getString("messages.level-broadcast",
+                    "<gray>{player} reached mining level <white>{level}<gray>.")
+                    .replace("{player}", p.getName()).replace("{level}", String.valueOf(prof.level))));
+        updateTitle(p, prof);
         if (milestone) {
             if (cfg.getBoolean("milestone-firework", true))
                 p.getWorld().spawnParticle(org.bukkit.Particle.FIREWORK, p.getLocation().add(0, 1, 0), 60, 0.6, 1, 0.6, 0.15);
@@ -206,6 +235,126 @@ public class MineLevels implements Listener {
     }
 
     public int milestoneEvery() { return cfg.getInt("milestone-every", 10); }
+
+    // ------------------------------------------------------------------ daily bonus
+
+    /**
+     * The first N blocks of the day pay extra. Cheap, and it gets people
+     * into a mine every day, which is the whole point of it.
+     */
+    private double dailyMultiplier(Profile prof) {
+        if (!cfg.getBoolean("daily.enabled", true)) return 1;
+        String today = java.time.LocalDate.now().toString();
+        if (!today.equals(prof.bonusDay)) {
+            prof.bonusDay = today;
+            prof.bonusBlocks = 0;
+            Player p = Bukkit.getPlayer(prof.id);
+            if (p != null) p.sendMessage(MM.deserialize(cfg.getString("messages.daily-start",
+                            "<gradient:#ffd166:#ff8c00>✦ Daily bonus:</gradient> <gray>your first {blocks} blocks today pay {times}× xp.")
+                    .replace("{blocks}", String.valueOf(cfg.getInt("daily.blocks", 100)))
+                    .replace("{times}", String.valueOf(cfg.getDouble("daily.multiplier", 3)))));
+        }
+        int limit = cfg.getInt("daily.blocks", 100);
+        if (prof.bonusBlocks >= limit) return 1;
+        prof.bonusBlocks++;
+        if (prof.bonusBlocks == limit) {
+            Player p = Bukkit.getPlayer(prof.id);
+            if (p != null) p.sendMessage(MM.deserialize(cfg.getString("messages.daily-done",
+                    "<gray>Daily bonus used up. <dark_gray>Back tomorrow.")));
+        }
+        return cfg.getDouble("daily.multiplier", 3);
+    }
+
+    /** Blocks of daily bonus left today, for the menu. */
+    public int dailyLeft(Profile prof) {
+        String today = java.time.LocalDate.now().toString();
+        int limit = cfg.getInt("daily.blocks", 100);
+        return today.equals(prof.bonusDay) ? Math.max(0, limit - prof.bonusBlocks) : limit;
+    }
+
+    // ------------------------------------------------------------------ titles
+
+    /**
+     * The title for a level, from `titles:` — the highest threshold reached.
+     * Handed over as a DeluxeTags permission, and the previous one taken
+     * away, so a player holds exactly one mining tag at a time.
+     */
+    public String titleFor(int level) {
+        ConfigurationSection t = cfg.getConfigurationSection("titles");
+        if (t == null) return null;
+        String best = null;
+        int bestAt = -1;
+        for (String k : t.getKeys(false)) {
+            int at;
+            try { at = Integer.parseInt(k); } catch (NumberFormatException e) { continue; }
+            if (level >= at && at > bestAt) { bestAt = at; best = t.getString(k); }
+        }
+        return best;
+    }
+
+    private void updateTitle(Player p, Profile prof) {
+        if (!cfg.getBoolean("titles-enabled", true)) return;
+        String tag = titleFor(prof.level);
+        if (tag == null || tag.equals(prof.heldTag)) return;
+        String perm = cfg.getString("title-permission", "deluxetags.tag.{tag}");
+        if (!prof.heldTag.isBlank())
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                    cfg.getString("title-revoke-command", "lp user {player} permission unset {permission}")
+                            .replace("{player}", p.getName()).replace("{permission}", perm.replace("{tag}", prof.heldTag)));
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                cfg.getString("title-grant-command", "lp user {player} permission set {permission} true")
+                        .replace("{player}", p.getName()).replace("{permission}", perm.replace("{tag}", tag)));
+        prof.heldTag = tag;
+        dirty = true;
+        p.sendMessage(MM.deserialize(cfg.getString("messages.title-earned",
+                "<gradient:#ffd166:#ff8c00>✦ New title:</gradient> <white>{tag}</white> <dark_gray>— /tags to wear it")
+                .replace("{tag}", tag)));
+    }
+
+    // ------------------------------------------------------------------ prestige
+
+    /** Goes round again: back to level 1, a star for good, and a quicker climb. */
+    public boolean prestige(Player p) {
+        Profile prof = profile(p);
+        int max = maxLevel();
+        int maxPrestige = cfg.getInt("prestige.max", 10);
+        if (prof.level < max) {
+            p.sendMessage(MM.deserialize(cfg.getString("messages.prestige-not-yet",
+                    "<red>You need level {max} to prestige. <gray>You're level {level}.")
+                    .replace("{max}", String.valueOf(max)).replace("{level}", String.valueOf(prof.level))));
+            return false;
+        }
+        if (prof.prestige >= maxPrestige) {
+            p.sendMessage(MM.deserialize(cfg.getString("messages.prestige-maxed", "<gray>That's as far as it goes.")));
+            return false;
+        }
+        prof.prestige++;
+        prof.level = 1;
+        prof.xp = 0;
+        dirty = true;
+        save();
+        p.showTitle(Title.title(
+                MM.deserialize(cfg.getString("messages.prestige-title", "<gradient:#e08cff:#7de2ff><bold>PRESTIGE {prestige}</bold></gradient>")
+                        .replace("{prestige}", String.valueOf(prof.prestige))),
+                MM.deserialize(cfg.getString("messages.prestige-subtitle", "<gray>Back to one. Faster this time.")),
+                Title.Times.times(Duration.ofMillis(300), Duration.ofMillis(3000), Duration.ofMillis(600))));
+        playSound(p, cfg.getString("sounds.prestige", "ui.toast.challenge_complete"), 0.8f);
+        p.getWorld().spawnParticle(org.bukkit.Particle.END_ROD, p.getLocation().add(0, 1, 0), 120, 0.8, 1.5, 0.8, 0.1);
+        Bukkit.broadcast(MM.deserialize(cfg.getString("messages.prestige-broadcast",
+                "<gradient:#e08cff:#7de2ff>★ {player} has prestiged their mining — prestige {prestige}.</gradient>")
+                .replace("{player}", p.getName()).replace("{prestige}", String.valueOf(prof.prestige))));
+        for (String cmd : cfg.getStringList("prestige.commands"))
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                    cmd.replace("{player}", p.getName()).replace("{prestige}", String.valueOf(prof.prestige)));
+        updateTitle(p, prof);
+        return true;
+    }
+
+    /** "★★" for the menus and placeholders. */
+    public String stars(Profile prof) {
+        String star = cfg.getString("prestige.star", "★");
+        return star.repeat(Math.max(0, prof.prestige));
+    }
 
     /**
      * A human sentence per reward command, for the menu.
@@ -262,6 +411,10 @@ public class MineLevels implements Listener {
             y.set(b + ".level", p.level);
             y.set(b + ".xp", p.xp);
             y.set(b + ".blocks", p.blocks);
+            y.set(b + ".prestige", p.prestige);
+            y.set(b + ".bonus-day", p.bonusDay);
+            y.set(b + ".bonus-blocks", p.bonusBlocks);
+            y.set(b + ".held-tag", p.heldTag);
         }
         try { y.save(file); dirty = false; } catch (Exception ex) {
             plugin.getLogger().severe("Couldn't save levels.yml: " + ex.getMessage());
@@ -280,6 +433,10 @@ public class MineLevels implements Listener {
                 p.level = root.getInt(id + ".level", 1);
                 p.xp = root.getDouble(id + ".xp");
                 p.blocks = root.getLong(id + ".blocks");
+                p.prestige = root.getInt(id + ".prestige", 0);
+                p.bonusDay = root.getString(id + ".bonus-day", "");
+                p.bonusBlocks = root.getInt(id + ".bonus-blocks", 0);
+                p.heldTag = root.getString(id + ".held-tag", "");
                 profiles.put(p.id, p);
             } catch (IllegalArgumentException ignored) { }
         }

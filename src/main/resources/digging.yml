@@ -1,0 +1,67 @@
+# ===========================================================================
+# FOSSILS, CONTRIBUTION BOARDS AND THE LAST BLOCK
+# ===========================================================================
+
+# ---------------------------------------------------------------- fossils
+# A small buried cluster placed on reset. Break any part and a clock starts:
+# dig the rest out in time and it pays, run out and it crumbles to gravel.
+# So it isn't "find the rare block", it's "spot it, then handle it".
+fossils:
+  enabled: true
+  # How often a reset buries one.
+  chance-per-reset: 0.35
+  # Radius of the cluster. 2 is about seven blocks.
+  size: 2
+  shell-block: BONE_BLOCK
+  heart-block: AMETHYST_BLOCK
+  # How long the finder has to get the rest out.
+  seconds: 25
+  # Only the person who found it can dig it; false lets anyone pile in.
+  finder-only: true
+  # Say when one is buried. Off makes them a genuine surprise.
+  announce-placed: true
+  placed-broadcast: "<gray>Something old is buried in <white>{mine}<gray>."
+  found-title: "<gradient:#ffd166:#ff8c00><bold>FOSSIL</bold></gradient>"
+  found-subtitle: "<gray>Dig it out — carefully, and quickly."
+  claimed-broadcast: "<gradient:#ffd166:#ff8c00>✦ {player} excavated a fossil from {mine}.</gradient>"
+  crumbled: "<gray>The fossil crumbles. <dark_gray>Too slow."
+  xp: 500
+  reward-commands:
+    - "crazyvouchers give {player} rare-key 1"
+    - "eco give {player} 25000"
+
+# ---------------------------------------------------------------- contributions
+# Who dug the most out of a mine THIS reset. Wiped every reset, which is
+# what makes it a race rather than a lifetime total nobody new can touch.
+contributions:
+  enabled: true
+  pay-on-reset: true
+  paid-places: 3
+  # Below this many blocks you're not in the running, so an empty mine
+  # doesn't pay out for six blocks.
+  minimum-blocks: 50
+  announce: true
+  broadcast: "<gray>Top of <white>{mine}<gray> this reset: {names}<gray>."
+  paid: "<gradient:#ffd166:#ff8c00>✦ #{place} in {mine}</gradient> <gray>— {blocks} blocks."
+  rewards:
+    1:
+      - "eco give {player} 50000"
+      - "crazyvouchers give {player} rare-key 1"
+    2:
+      - "eco give {player} 25000"
+    3:
+      - "eco give {player} 10000"
+
+# ---------------------------------------------------------------- last block
+# Whoever empties a mine before it resets. Gives the end of a reset a shape
+# it didn't have — people race the timer instead of drifting off.
+last-block:
+  enabled: true
+  # A mine counts as empty at this many blocks left.
+  blocks-left: 3
+  # Counting a whole region is expensive, so it's only checked every N breaks.
+  check-every: 20
+  xp: 250
+  broadcast: "<gradient:#8cff9e:#1fbf5a>✦ {player} emptied {mine} — last block bonus.</gradient>"
+  reward-commands:
+    - "eco give {player} 30000"

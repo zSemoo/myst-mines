@@ -21,7 +21,7 @@ import java.util.UUID;
 public class LevelGui extends MystGui {
 
     private final UUID subject;
-    private static final int ME = 13, TOP = 26, NEXT_ROW_START = 28;
+    private static final int ME = 13, TOP = 26, PRESTIGE = 18, NEXT_ROW_START = 28;
 
     public LevelGui(CataMines plugin, UUID subject) {
         super(plugin);
@@ -42,16 +42,28 @@ public class LevelGui extends MystGui {
         List<String> lore = new ArrayList<>();
         lore.add("<gray>Every block you break in a mine counts.");
         lore.add("");
+        String stars = levels.stars(prof);
+        if (!stars.isEmpty()) lore.add("<gradient:#e08cff:#7de2ff>" + stars + "</gradient> <gray>prestige " + prof.prestige);
+        String title = levels.titleFor(prof.level);
+        if (title != null) lore.add("<gray>Title: <white>" + title);
         lore.add("<gray>Level <white>" + prof.level + "<dark_gray>/" + levels.maxLevel());
         lore.add(levels.bar(levels.progress(prof)));
         lore.add("<gray>XP: <white>" + (long) prof.xp + "<dark_gray>/" + need);
         lore.add("<gray>Blocks mined: <white>" + prof.blocks);
         if (place > 0) lore.add("<gray>Placed: <white>#" + place);
+        int daily = levels.dailyLeft(prof);
+        lore.add(daily > 0 ? "<gold>Daily bonus: <white>" + daily + " <gray>blocks left" : "<dark_gray>Daily bonus used up.");
         inventory.setItem(ME, head(owner,
                 "<gradient:#ffd166:#ff8c00>" + (owner.getName() == null ? "You" : owner.getName()) + "</gradient>", lore));
 
         inventory.setItem(TOP, item(Material.GOLD_INGOT, "<gold>Leaderboard",
                 List.of("<gray>Who's put the most hours in.", "", "<yellow>Click <gray>to see it")));
+        boolean canPrestige = prof.level >= levels.maxLevel();
+        inventory.setItem(PRESTIGE, item(canPrestige ? Material.NETHER_STAR : Material.GRAY_DYE,
+                (canPrestige ? "<gradient:#e08cff:#7de2ff>" : "<dark_gray>") + "Prestige" + (canPrestige ? "</gradient>" : ""),
+                List.of("<gray>At level " + levels.maxLevel() + ", go round again:",
+                        "<gray>back to 1, a permanent <white>★<gray>, a faster climb.",
+                        "", canPrestige ? "<yellow>Click <gray>to prestige" : "<dark_gray>Not yet.")));
 
         int every = levels.milestoneEvery();
         int shown = 0;
@@ -77,5 +89,9 @@ public class LevelGui extends MystGui {
     @Override
     public void onClick(Player p, InventoryClickEvent e) {
         if (e.getSlot() == TOP) new LevelTopGui(plugin).open(p);
+        if (e.getSlot() == PRESTIGE) {
+            p.closeInventory();
+            p.performCommand("level prestige");
+        }
     }
 }

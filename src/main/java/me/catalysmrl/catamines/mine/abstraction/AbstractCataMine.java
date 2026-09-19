@@ -46,6 +46,9 @@ public abstract class AbstractCataMine implements CataMine, RewardHolder, Clonea
 
     @Override
     public void reset(CataMines plugin) {
+        // Tell anyone listening before the refill, while the mine's last
+        // state can still be read.
+        org.bukkit.Bukkit.getPluginManager().callEvent(new me.catalysmrl.catamines.api.events.CataMineResetEvent(this));
         regionManager.getUpcoming().ifPresent(region -> plugin.getMineManager().resetRegion(region));
         regionManager.next();
     }

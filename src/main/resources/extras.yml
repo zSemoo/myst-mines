@@ -1,0 +1,71 @@
+# ===========================================================================
+# FOSSILS and CHALLENGES
+# ===========================================================================
+
+fossils:
+  enabled: true
+  # After a reset, the chance a mine hides one.
+  chance-per-reset: 0.35
+  announce-buried: true
+  blocks:
+    - BONE_BLOCK
+    - BONE_BLOCK
+    - AMETHYST_BLOCK
+  # Paid to whoever digs one out whole. {player} {mine}
+  reward-commands:
+    - "crazyvouchers give {player} legendary-key 1"
+    - "eco give {player} 25000"
+  messages:
+    buried: "<gradient:#e8e0c8:#a89f80>☠ Something old is buried in {mine}.</gradient> <gray>Dig it out whole."
+    progress: "<#e8e0c8>Fossil: <white>{dug}<dark_gray>/{total} <gray>— mind what's holding it up"
+    crumbled: "<gray>The fossil in <white>{mine}<gray> crumbled. <dark_gray>{player} knocked out what was holding it."
+    excavated: "<gradient:#e8e0c8:#a89f80>☠ {player} dug a fossil out of {mine} in one piece.</gradient>"
+
+# One challenge per mine per week, rotated by the calendar week so a mine
+# cycles through its list. A mine with no list uses `default`. Types:
+#   blocks            any block broken there
+#   block:<material>  a particular block, e.g. block:diamond_ore
+#   fossil            fossils excavated there
+challenges:
+  # {player} {mine}
+  complete-commands:
+    - "eco give {player} 10000"
+  # on top, for the first to finish that mine's challenge this week
+  first-commands:
+    - "crazyvouchers give {player} rare-key 1"
+  messages:
+    progress: "<#7de2ff>{challenge}: <white>{now}<dark_gray>/{target}"
+    complete: "<gradient:#7de2ff:#1fa9d6>✦ {player} finished this week's {mine} challenge.</gradient>"
+    first: "<gradient:#ffd166:#ff8c00>✦ {player} was FIRST to finish this week's {mine} challenge.</gradient>"
+
+  default:
+    grind:
+      name: "Five hundred blocks"
+      type: blocks
+      target: 500
+    marathon:
+      name: "Two thousand blocks"
+      type: blocks
+      target: 2000
+  peasant:
+    grind:
+      name: "A thousand in peasant"
+      type: blocks
+      target: 1000
+    iron:
+      name: "Iron in peasant"
+      type: block:iron_ore
+      target: 300
+  king:
+    emeralds:
+      name: "Emeralds from the king mine"
+      type: block:emerald_ore
+      target: 150
+    bones:
+      name: "Three fossils from the king mine"
+      type: fossil
+      target: 3
+    marathon:
+      name: "Three thousand in king"
+      type: blocks
+      target: 3000
