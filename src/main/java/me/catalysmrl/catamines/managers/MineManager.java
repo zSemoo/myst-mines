@@ -323,9 +323,22 @@ public class MineManager {
         return loaded;
     }
 
+    /**
+     * A mine by name.
+     *
+     * Exact match first, then ignoring case. Mine names are typed by hand in
+     * commands and stored lowercased in a few places, and an exact-only
+     * lookup meant anything with a capital letter in its name silently
+     * "didn't exist".
+     */
     public Optional<CataMine> getMine(String id) {
-        return mines.stream()
+        if (id == null) return Optional.empty();
+        Optional<CataMine> exact = mines.stream()
                 .filter(cataMine -> cataMine.getName().equals(id))
+                .findFirst();
+        if (exact.isPresent()) return exact;
+        return mines.stream()
+                .filter(cataMine -> cataMine.getName().equalsIgnoreCase(id))
                 .findFirst();
     }
 

@@ -38,30 +38,53 @@ public class MineEditGui extends MystGui {
             TELEPORT = 37, COUNTDOWN = 38, ANNOUNCE = 39, MOVE_PLAYERS = 40, DELAY = 41, ENABLED = 42, RESET = 43, GATE = 44, BACK = 45;
 
     /**
-     * Who is watching which mine's countdown.
+     * Which mines each player is watching.
+     *
+     * A SET per player, not one mine: storing a single name meant turning
+     * the countdown on for one mine silently turned it off for another,
+     * which is not what "toggle this mine" says on the tin.
      *
      * Written to watchers.yml, because a preference that vanishes on every
-     * restart looks exactly like a toggle that doesn't work — which is what
-     * it looked like.
+     * restart looks exactly like a toggle that doesn't work.
      */
-    private static final Map<UUID, String> watchingMine = new HashMap<>();
+    private static final Map<UUID, Set<String>> watchingMines = new HashMap<>();
+
+    private static Set<String> watched(UUID id) {
+        return watchingMines.computeIfAbsent(id, k -> new LinkedHashSet<>());
+    }
+
+    private static boolean isWatching(UUID id, String mine) {
+        for (String m : watchingMines.getOrDefault(id, Set.of()))
+            if (m.equalsIgnoreCase(mine)) return true;
+        return false;
+    }
 
     public static void loadWatchers(CataMines plugin) {
-        watchingMine.clear();
+        watchingMines.clear();
         File f = new File(plugin.getDataFolder(), "watchers.yml");
         if (!f.exists()) return;
         var y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
         var sec = y.getConfigurationSection("watching");
         if (sec == null) return;
         for (String id : sec.getKeys(false)) {
-            try { watchingMine.put(UUID.fromString(id), sec.getString(id)); }
-            catch (IllegalArgumentException ignored) { }
+            try {
+                UUID uuid = UUID.fromString(id);
+                // A file written by the old single-mine version holds a
+                // string here rather than a list; read both.
+                if (sec.isList(id)) watched(uuid).addAll(sec.getStringList(id));
+                else {
+                    String one = sec.getString(id);
+                    if (one != null && !one.isBlank()) watched(uuid).add(one);
+                }
+            } catch (IllegalArgumentException ignored) { }
         }
     }
 
     public static void saveWatchers(CataMines plugin) {
         var y = new org.bukkit.configuration.file.YamlConfiguration();
-        watchingMine.forEach((id, mine) -> y.set("watching." + id, mine));
+        watchingMines.forEach((id, mines) -> {
+            if (!mines.isEmpty()) y.set("watching." + id, new ArrayList<>(mines));
+        });
         try { y.save(new File(plugin.getDataFolder(), "watchers.yml")); }
         catch (Exception ex) { plugin.getLogger().warning("Couldn't save watchers.yml: " + ex.getMessage()); }
     }
@@ -134,7 +157,7 @@ public class MineEditGui extends MystGui {
 
         inventory.setItem(TELEPORT, item(Material.ENDER_PEARL, "<aqua>Teleport to the mine", List.of()));
 
-        boolean watchingThis = mine.getName().equalsIgnoreCase(watchingMine.get(viewer.getUniqueId()));
+        boolean watchingThis = isWatching(viewer.getUniqueId(), mine.getName());
         inventory.setItem(COUNTDOWN, item(watchingThis ? Material.CLOCK : Material.GRAY_DYE,
                 (watchingThis ? "<green>" : "<gray>") + "Reset countdown on your screen",
                 List.of("<gray>Shows this mine's time to reset on your action bar.",
@@ -224,13 +247,16 @@ public class MineEditGui extends MystGui {
                 centre().ifPresent(p::teleport);
             }
             case COUNTDOWN -> {
-                boolean on = mine.getName().equalsIgnoreCase(watchingMine.get(p.getUniqueId()));
-                if (on) watchingMine.remove(p.getUniqueId());
-                else watchingMine.put(p.getUniqueId(), mine.getName());
+                boolean on = isWatching(p.getUniqueId(), mine.getName());
+                if (on) watched(p.getUniqueId()).removeIf(m -> m.equalsIgnoreCase(mine.getName()));
+                else watched(p.getUniqueId()).add(mine.getName());
                 saveWatchers(plugin);
+                int total = watched(p.getUniqueId()).size();
                 p.sendMessage(MM.deserialize(on
-                        ? "<gray>Countdown hidden."
-                        : "<green>Countdown on <dark_gray>— it shows while you're at " + mine.getName() + "."));
+                        ? "<gray>Countdown hidden for <white>" + mine.getName() + "<gray>."
+                        : "<green>Countdown on for <white>" + mine.getName() + "<green>"
+                          + (total > 1 ? " <dark_gray>(" + total + " mines watched)" : "")
+                          + " <dark_gray>— it shows while you're there."));
                 refresh(p);
             }
             case ANNOUNCE -> {
@@ -350,14 +376,19 @@ public class MineEditGui extends MystGui {
 
     /** Ticked every second: anyone watching a mine sees its timer. */
     public static void tickCountdowns(CataMines plugin) {
-        if (watchingMine.isEmpty()) return;
-        for (UUID id : new ArrayList<>(watchingMine.keySet())) {
+        if (watchingMines.isEmpty()) return;
+        for (UUID id : new ArrayList<>(watchingMines.keySet())) {
             Player p = Bukkit.getPlayer(id);
-            String name = watchingMine.get(id);
             // Offline is not "no longer interested" — the preference is kept
-            // and simply isn't drawn. Only a mine that no longer exists
-            // clears it.
+            // and simply isn't drawn.
             if (p == null) continue;
+            // Several mines can be watched; draw the one they're standing in.
+            String name = null;
+            for (String candidate : watchingMines.get(id)) {
+                CataMine m = findMine(plugin, candidate);
+                if (m != null && nearMine(p, m, 1)) { name = candidate; break; }
+            }
+            if (name == null) continue;
             // Case-insensitive, and NEVER removed here. The tick is a
             // drawing loop; the only thing that should turn this preference
             // off is the player turning it off. A lookup that missed for any
@@ -366,9 +397,7 @@ public class MineEditGui extends MystGui {
             // exactly what it looked like from the outside.
             CataMine mine = findMine(plugin, name);
             if (mine == null) continue;
-            // Only shown while you're at the mine — a block inside its
-            // bounds counts, so standing on the rim still shows it.
-            if (!nearMine(p, mine, 1)) continue;
+
             CataMineController c = mine.getController();
             String text = mine.getFlags().isStopped() ? "<red>" + name + " is disabled"
                     : "<gold>" + name + " <gray>resets in <white>" + Math.max(0, c.getCountdown()) + "s";

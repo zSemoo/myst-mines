@@ -35,7 +35,10 @@ public class MineEvents {
 
     public static class Active {
         public Kind kind;
+        /** The map key: the mine's name, lowercased. */
         public String mine;
+        /** The mine's name as it really is, for looking it up again. */
+        public String realName;
         public long endsAt;
         public double dropMultiplier = 1, xpMultiplier = 1;
         /** For METEOR: where the prize block is, and whether it's been claimed. */
@@ -124,6 +127,7 @@ public class MineEvents {
         Active a = new Active();
         a.kind = kind;
         a.mine = key;
+        a.realName = mine.getName();
         a.endsAt = System.currentTimeMillis() + seconds * 1000L;
         a.dropMultiplier = cfg.getDouble(path + "drop-multiplier", 1);
         a.xpMultiplier = cfg.getDouble(path + "xp-multiplier", 1);
@@ -145,6 +149,16 @@ public class MineEvents {
         announce(kind, mine, seconds, path, blockOf(blockOverride,
                 cfg.getString(path + "block", kind == Kind.GOLDEN_VEIN ? "minecraft:gold_block" : "minecraft:diamond_block")));
         return true;
+    }
+
+    /** A mine by name, ignoring case. */
+    private CataMine findMine(String name) {
+        if (name == null) return null;
+        var exact = plugin.getMineManager().getMine(name).orElse(null);
+        if (exact != null) return exact;
+        for (CataMine m : plugin.getMineManager().getMines())
+            if (m.getName().equalsIgnoreCase(name)) return m;
+        return null;
     }
 
     /** Where a mine's pre-event file is kept. */
@@ -342,14 +356,22 @@ public class MineEvents {
                 if (candidate.equalsIgnoreCase(key)) { a = running.remove(candidate); break; }
         }
         if (a == null) return false;
-        CataMine m = plugin.getMineManager().getMine(a.mine).orElse(null);
+        // By its real name, and case-insensitively. This used to look the
+        // mine up by the LOWERCASED map key with an exact-match getMine(),
+        // so any mine whose name had a capital in it — Vig, VigWood, Knight
+        // — failed here: the entry was already removed, stop() reported
+        // nothing running, and the mine was left painted for good. Mines
+        // with all-lowercase names were unaffected, which is why duke alone
+        // behaved.
+        CataMine m = findMine(a.realName != null ? a.realName : a.mine);
         if (m == null) {
-            plugin.getLogger().warning("Event " + a.kind + " was running in '" + a.mine + "' but that mine no longer exists; couldn't restore it.");
+            plugin.getLogger().warning("Event " + a.kind + " was running in '"
+                    + (a.realName != null ? a.realName : a.mine) + "' but that mine can't be found; couldn't restore it.");
             return false;
         }
         if (a.kind == Kind.RUSH && a.previousDelay >= 0) m.getController().setResetDelay(a.previousDelay);
         // Restore from the file first; memory is only the fallback.
-        if (restoreFromBackup(a.mine)) {
+        if (restoreFromBackup(a.realName != null ? a.realName : a.mine)) {
             Bukkit.broadcast(MM.deserialize(cfg.getString("events." + a.kind.name().toLowerCase() + ".end-broadcast",
                     "<gray>The {kind} in <white>{mine}<gray> is over.")
                     .replace("{kind}", pretty(a.kind)).replace("{mine}", a.mine)));
@@ -371,7 +393,7 @@ public class MineEvents {
     /** Every mine with an event running, for the command's feedback. */
     public List<String> runningMines() {
         List<String> out = new ArrayList<>();
-        for (Active a : running.values()) out.add(a.mine);
+        for (Active a : running.values()) out.add(a.realName != null ? a.realName : a.mine);
         return out;
     }
 

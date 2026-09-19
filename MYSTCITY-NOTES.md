@@ -169,6 +169,19 @@ Three separate faults, all ending in a mine stuck on diamond:
 backup still on disk at startup means an event never finished, so it's
 restored automatically with a warning.
 
+### Why events broke on some mines and not others
+`Active.mine` held the map key — the mine's name LOWERCASED — and `stop()`
+then looked the mine up with an exact-match `getMine()`. So any mine whose
+name has a capital letter (Vig, VigWood, Knight) failed the lookup: the
+entry had already been removed from the map, stop() returned false and
+reported "no events running", and the mine was left painted permanently.
+`duke` and the other all-lowercase mines were unaffected, which is exactly
+the pattern that showed up in testing.
+
+Fixed three ways: Active now also stores the mine's real name and uses it;
+MineEvents looks up case-insensitively; and `MineManager.getMine` itself
+falls back to a case-insensitive match, so every caller benefits.
+
 ### Reload
 Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
 implemented now: running tasks stopped, current mines saved (so an in-game
