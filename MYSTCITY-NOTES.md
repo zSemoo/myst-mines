@@ -143,6 +143,14 @@ fires the event, and honours a cancel.
 standing in, and your own level — so "nothing is happening" can be answered
 in one command.
 
+### Soul lore wiped other plugins' lore
+`describe()` rewrote the pickaxe's lore wholesale, so a custom enchant's
+lines were destroyed on awaken and again on every redraw — which also made a
+newly applied enchant look like it hadn't applied, since it was added and
+then wiped on the next swing. Each soul line now starts with a zero-width
+space, so a redraw removes exactly its own lines and leaves everything else
+where it was.
+
 ### Reload
 Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
 implemented now: running tasks stopped, current mines saved (so an in-game

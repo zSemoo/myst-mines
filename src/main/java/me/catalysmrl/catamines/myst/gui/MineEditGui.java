@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -39,10 +40,31 @@ public class MineEditGui extends MystGui {
     /**
      * Who is watching which mine's countdown.
      *
-     * One map rather than a set plus a map: the two could disagree, and a
-     * toggle that half-registered looked like it hadn't saved at all.
+     * Written to watchers.yml, because a preference that vanishes on every
+     * restart looks exactly like a toggle that doesn't work — which is what
+     * it looked like.
      */
     private static final Map<UUID, String> watchingMine = new HashMap<>();
+
+    public static void loadWatchers(CataMines plugin) {
+        watchingMine.clear();
+        File f = new File(plugin.getDataFolder(), "watchers.yml");
+        if (!f.exists()) return;
+        var y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
+        var sec = y.getConfigurationSection("watching");
+        if (sec == null) return;
+        for (String id : sec.getKeys(false)) {
+            try { watchingMine.put(UUID.fromString(id), sec.getString(id)); }
+            catch (IllegalArgumentException ignored) { }
+        }
+    }
+
+    public static void saveWatchers(CataMines plugin) {
+        var y = new org.bukkit.configuration.file.YamlConfiguration();
+        watchingMine.forEach((id, mine) -> y.set("watching." + id, mine));
+        try { y.save(new File(plugin.getDataFolder(), "watchers.yml")); }
+        catch (Exception ex) { plugin.getLogger().warning("Couldn't save watchers.yml: " + ex.getMessage()); }
+    }
 
     public MineEditGui(CataMines plugin, CataMine mine) {
         super(plugin);
@@ -205,6 +227,7 @@ public class MineEditGui extends MystGui {
                 boolean on = mine.getName().equalsIgnoreCase(watchingMine.get(p.getUniqueId()));
                 if (on) watchingMine.remove(p.getUniqueId());
                 else watchingMine.put(p.getUniqueId(), mine.getName());
+                saveWatchers(plugin);
                 p.sendMessage(MM.deserialize(on
                         ? "<gray>Countdown hidden."
                         : "<green>Countdown on <dark_gray>— it shows while you're at " + mine.getName() + "."));
@@ -300,6 +323,16 @@ public class MineEditGui extends MystGui {
 
     // ------------------------------------------------------------------ the countdown
 
+    /** A mine by name, ignoring case. */
+    private static CataMine findMine(CataMines plugin, String name) {
+        if (name == null) return null;
+        var exact = plugin.getMineManager().getMine(name).orElse(null);
+        if (exact != null) return exact;
+        for (CataMine m : plugin.getMineManager().getMines())
+            if (m.getName().equalsIgnoreCase(name)) return m;
+        return null;
+    }
+
     /** Inside the mine's box, grown by `pad` blocks on every side. */
     private static boolean nearMine(Player p, CataMine mine, int pad) {
         try {
@@ -321,11 +354,18 @@ public class MineEditGui extends MystGui {
         for (UUID id : new ArrayList<>(watchingMine.keySet())) {
             Player p = Bukkit.getPlayer(id);
             String name = watchingMine.get(id);
-            // Only drop them when they log off — not when they wander away,
-            // which is the whole point of the proximity check below.
-            if (p == null) { watchingMine.remove(id); continue; }
-            CataMine mine = plugin.getMineManager().getMine(name).orElse(null);
-            if (mine == null) { watchingMine.remove(id); continue; }
+            // Offline is not "no longer interested" — the preference is kept
+            // and simply isn't drawn. Only a mine that no longer exists
+            // clears it.
+            if (p == null) continue;
+            // Case-insensitive, and NEVER removed here. The tick is a
+            // drawing loop; the only thing that should turn this preference
+            // off is the player turning it off. A lookup that missed for any
+            // reason — a reload mid-tick, a name typed in another case —
+            // used to silently wipe it seconds after it was set, which is
+            // exactly what it looked like from the outside.
+            CataMine mine = findMine(plugin, name);
+            if (mine == null) continue;
             // Only shown while you're at the mine — a block inside its
             // bounds counts, so standing on the rim still shows it.
             if (!nearMine(p, mine, 1)) continue;

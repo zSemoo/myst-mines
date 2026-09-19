@@ -83,6 +83,7 @@ public final class CataMines extends JavaPlugin {
     @Override
     public void onDisable() {
         if (mineLevels != null) mineLevels.save();
+        me.catalysmrl.catamines.myst.gui.MineEditGui.saveWatchers(this);
         if (contributions != null) contributions.save();
         if (mineChallenges != null) mineChallenges.save();
         INSTANCE = null;
@@ -153,6 +154,7 @@ public final class CataMines extends JavaPlugin {
         pm.registerEvents(new me.catalysmrl.catamines.myst.gui.MystGui.Clicks(), this);
         pm.registerEvents(new me.catalysmrl.catamines.myst.event.MeteorListener(this), this);
         getServer().getScheduler().runTaskTimer(this, () -> mineEvents.tick(), 20L, 20L);
+        me.catalysmrl.catamines.myst.gui.MineEditGui.loadWatchers(this);
         getServer().getScheduler().runTaskTimer(this,
                 () -> me.catalysmrl.catamines.myst.gui.MineEditGui.tickCountdowns(this), 40L, 20L);
         getServer().getScheduler().runTaskTimer(this, () -> mineLevels.save(), 600L, 1200L);
