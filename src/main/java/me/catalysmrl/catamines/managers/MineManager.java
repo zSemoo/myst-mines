@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import me.catalysmrl.catamines.api.events.CataMineBlockBreakEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.scheduler.BukkitTask;
@@ -250,8 +251,41 @@ public class MineManager {
         mines.addAll(getMinesFromFolder(folder));
     }
 
+    /**
+     * Fires CataMineBlockBreakEvent when a block is broken inside a mine.
+     *
+     * Upstream left this empty, which meant the event never fired and
+     * everything listening for it — levels, pickaxe souls, contribution
+     * boards, weekly challenges — silently did nothing. This is the missing
+     * body: find the mine and region for the block, work out which entry of
+     * the composition it matches, and fire.
+     */
     public void callBlockBreak(BlockBreakEvent event) {
-        
+        org.bukkit.Location at = event.getBlock().getLocation();
+        CataMine mine = getMineAtLocation(at).orElse(null);
+        if (mine == null) return;
+        CataMineRegion region = getRegionAtLocation(mine, at).orElse(null);
+        if (region == null) return;
+
+        var composition = region.getCompositionManager().getCurrent().orElse(null);
+        // Which block of the composition was this? Matched by material, since
+        // that's all the broken block can tell us. Null when it isn't one of
+        // them (someone's own placed block, a fossil, an event's paint).
+        me.catalysmrl.catamines.mine.components.composition.CataMineBlock which = null;
+        if (composition != null) {
+            String broken = event.getBlock().getType().name().toLowerCase(java.util.Locale.ROOT);
+            for (var candidate : composition.getBlocks()) {
+                if (candidate.getBaseBlock() == null) continue;
+                String name = candidate.getBaseBlock().toString().split("\\[")[0]
+                        .replace("minecraft:", "").toLowerCase(java.util.Locale.ROOT);
+                if (name.equals(broken)) { which = candidate; break; }
+            }
+        }
+
+        CataMineBlockBreakEvent mineEvent =
+                new CataMineBlockBreakEvent(mine, region, composition, which, event);
+        plugin.getServer().getPluginManager().callEvent(mineEvent);
+        if (mineEvent.isCancelled()) event.setCancelled(true);
     }
 
     public void callBlockPlace(BlockPlaceEvent event) {

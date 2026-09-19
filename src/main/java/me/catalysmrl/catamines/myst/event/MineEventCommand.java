@@ -80,7 +80,39 @@ public class MineEventCommand implements TabExecutor {
             case "stop" -> {
                 if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
                 if (args.length < 2) { tell(sender, "<red>/mine stop <mine>"); return true; }
-                tell(sender, events.stop(args[1]) ? "<green>Stopped and restored." : "<gray>Nothing running in " + args[1] + ".");
+                if (args[1].equalsIgnoreCase("all")) {
+                    var names = events.runningMines();
+                    events.stopAll();
+                    tell(sender, names.isEmpty() ? "<gray>Nothing was running." : "<green>Stopped " + names.size() + ": " + String.join(", ", names));
+                    return true;
+                }
+                if (events.stop(args[1])) { tell(sender, "<green>Stopped and restored."); return true; }
+                var names = events.runningMines();
+                tell(sender, names.isEmpty()
+                        ? "<gray>No events are running anywhere."
+                        : "<gray>Nothing running in <white>" + args[1] + "<gray>. Running: <white>" + String.join(", ", names));
+            }
+            case "debug", "diag" -> {
+                if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
+                var mines = plugin.getMineManager().getMines();
+                tell(sender, "<gold>MystMines diagnostics");
+                tell(sender, "<gray>Mines loaded: <white>" + mines.size());
+                for (var m : mines) {
+                    var c = m.getController();
+                    tell(sender, "<dark_gray>• <white>" + m.getName()
+                            + " <gray>" + c.getResetMode() + " <dark_gray>delay " + c.getResetDelay()
+                            + ", next in " + c.getCountdown() + "s"
+                            + (m.getFlags().isStopped() ? " <red>disabled" : "")
+                            + (events.running(m.getName()) != null ? " <gold>event" : ""));
+                }
+                if (sender instanceof Player p) {
+                    var here = plugin.getMineManager().getMineAtLocation(p.getLocation()).orElse(null);
+                    tell(sender, "<gray>You're standing in: <white>" + (here == null ? "no mine" : here.getName()));
+                    var prof = plugin.getMineLevels().profile(p);
+                    tell(sender, "<gray>Your level: <white>" + prof.level + " <dark_gray>" + (long) prof.xp
+                            + " xp, " + prof.blocks + " blocks counted");
+                    tell(sender, "<gray>Levelling enabled: <white>" + plugin.getMineLevels().enabled());
+                }
             }
             case "reload" -> {
                 if (!sender.hasPermission("mystmines.events")) { tell(sender, "<red>No."); return true; }
@@ -120,7 +152,7 @@ public class MineEventCommand implements TabExecutor {
                 ? Arrays.copyOfRange(rawArgs, 1, rawArgs.length) : rawArgs;
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
-            for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "status", "challenges", "reload"))
+            for (String s : List.of("party", "vein", "rush", "double", "meteor", "stop", "status", "challenges", "debug", "reload"))
                 if (s.startsWith(args[0].toLowerCase(Locale.ROOT))) out.add(s);
         } else if (args.length == 2 && !args[0].equalsIgnoreCase("status") && !args[0].equalsIgnoreCase("challenges")) {
             plugin.getMineManager().getMines().forEach(m -> {

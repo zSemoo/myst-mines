@@ -245,7 +245,15 @@ public class MineEvents {
     // ------------------------------------------------------------------ ending
 
     public boolean stop(String mine) {
-        Active a = running.remove(mine.toLowerCase());
+        if (mine == null) return false;
+        String key = mine.toLowerCase(Locale.ROOT);
+        Active a = running.remove(key);
+        if (a == null) {
+            // Try the mine's real name, in case they typed a different case
+            // or a partial one.
+            for (String candidate : new ArrayList<>(running.keySet()))
+                if (candidate.equalsIgnoreCase(key) || candidate.startsWith(key)) { a = running.remove(candidate); break; }
+        }
         if (a == null) return false;
         CataMine m = plugin.getMineManager().getMine(a.mine).orElse(null);
         if (m == null) {
@@ -264,6 +272,13 @@ public class MineEvents {
                 "<gray>The {kind} in <white>{mine}<gray> is over.")
                 .replace("{kind}", pretty(a.kind)).replace("{mine}", a.mine)));
         return true;
+    }
+
+    /** Every mine with an event running, for the command's feedback. */
+    public List<String> runningMines() {
+        List<String> out = new ArrayList<>();
+        for (Active a : running.values()) out.add(a.mine);
+        return out;
     }
 
     /** Ends every running event, restoring each mine. Used before reload and shutdown. */

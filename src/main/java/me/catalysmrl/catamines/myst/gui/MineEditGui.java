@@ -36,8 +36,12 @@ public class MineEditGui extends MystGui {
     private static final int TOTAL = 4, ADD = 27,
             TELEPORT = 37, COUNTDOWN = 38, ANNOUNCE = 39, MOVE_PLAYERS = 40, DELAY = 41, ENABLED = 42, RESET = 43, GATE = 44, BACK = 45;
 
-    /** Players who asked to see this mine's countdown on their action bar. */
-    private static final Set<UUID> watching = new HashSet<>();
+    /**
+     * Who is watching which mine's countdown.
+     *
+     * One map rather than a set plus a map: the two could disagree, and a
+     * toggle that half-registered looked like it hadn't saved at all.
+     */
     private static final Map<UUID, String> watchingMine = new HashMap<>();
 
     public MineEditGui(CataMines plugin, CataMine mine) {
@@ -108,7 +112,7 @@ public class MineEditGui extends MystGui {
 
         inventory.setItem(TELEPORT, item(Material.ENDER_PEARL, "<aqua>Teleport to the mine", List.of()));
 
-        boolean watchingThis = watching.contains(viewer.getUniqueId()) && mine.getName().equals(watchingMine.get(viewer.getUniqueId()));
+        boolean watchingThis = mine.getName().equalsIgnoreCase(watchingMine.get(viewer.getUniqueId()));
         inventory.setItem(COUNTDOWN, item(watchingThis ? Material.CLOCK : Material.GRAY_DYE,
                 (watchingThis ? "<green>" : "<gray>") + "Reset countdown on your screen",
                 List.of("<gray>Shows this mine's time to reset on your action bar.",
@@ -198,9 +202,12 @@ public class MineEditGui extends MystGui {
                 centre().ifPresent(p::teleport);
             }
             case COUNTDOWN -> {
-                boolean on = watching.contains(p.getUniqueId()) && mine.getName().equals(watchingMine.get(p.getUniqueId()));
-                if (on) { watching.remove(p.getUniqueId()); watchingMine.remove(p.getUniqueId()); }
-                else { watching.add(p.getUniqueId()); watchingMine.put(p.getUniqueId(), mine.getName()); }
+                boolean on = mine.getName().equalsIgnoreCase(watchingMine.get(p.getUniqueId()));
+                if (on) watchingMine.remove(p.getUniqueId());
+                else watchingMine.put(p.getUniqueId(), mine.getName());
+                p.sendMessage(MM.deserialize(on
+                        ? "<gray>Countdown hidden."
+                        : "<green>Countdown on <dark_gray>— it shows while you're at " + mine.getName() + "."));
                 refresh(p);
             }
             case ANNOUNCE -> {
@@ -310,13 +317,15 @@ public class MineEditGui extends MystGui {
 
     /** Ticked every second: anyone watching a mine sees its timer. */
     public static void tickCountdowns(CataMines plugin) {
-        if (watching.isEmpty()) return;
-        for (UUID id : new ArrayList<>(watching)) {
+        if (watchingMine.isEmpty()) return;
+        for (UUID id : new ArrayList<>(watchingMine.keySet())) {
             Player p = Bukkit.getPlayer(id);
             String name = watchingMine.get(id);
-            if (p == null || name == null) { watching.remove(id); continue; }
+            // Only drop them when they log off — not when they wander away,
+            // which is the whole point of the proximity check below.
+            if (p == null) { watchingMine.remove(id); continue; }
             CataMine mine = plugin.getMineManager().getMine(name).orElse(null);
-            if (mine == null) { watching.remove(id); continue; }
+            if (mine == null) { watchingMine.remove(id); continue; }
             // Only shown while you're at the mine — a block inside its
             // bounds counts, so standing on the rim still shows it.
             if (!nearMine(p, mine, 1)) continue;

@@ -131,6 +131,18 @@ configs match; the old classes and `boards.yml`/`extras.yml` are gone.
 `/cm setresetteleport` takes the mine name: `/cm setresetteleport king`. If
 it's still refusing with the name given, paste what it says.
 
+### The big one: CataMineBlockBreakEvent was never fired
+`MineManager.callBlockBreak` was an empty method upstream, so the plugin's
+own break event never fired — and everything listening for it (mining
+levels, pickaxe souls, contribution boards, weekly challenges) silently did
+nothing, which is why none of it appeared to work. Implemented: it finds the
+mine and region for the broken block, matches it against the composition,
+fires the event, and honours a cancel.
+
+`/mine debug` reports mines loaded, each one's reset state, which mine you're
+standing in, and your own level — so "nothing is happening" can be answered
+in one command.
+
 ### Reload
 Upstream's `/cm reload` was a stub that printed "Not supported yet". It's
 implemented now: running tasks stopped, current mines saved (so an in-game
