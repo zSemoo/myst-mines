@@ -28,15 +28,6 @@ public class DigListener implements Listener {
         plugin.getContributions().record(p, e.getCataMine());
         plugin.getMineChallenges().record(p, e.getCataMine(), block);
 
-        var pick = p.getInventory().getItemInMainHand();
-        if (plugin.getPickaxeSouls().hasSoul(pick)) {
-            plugin.getPickaxeSouls().onBreak(p, pick, plugin.getMineLevels().xpFor(e.getCataMine().getName(), block));
-            // getItemInMainHand() can hand back a copy on newer Paper, in
-            // which case edits to it never reach the inventory — which is
-            // exactly why soul progress looked stuck. Put it back explicitly.
-            p.getInventory().setItemInMainHand(pick);
-        }
-
         plugin.getLastBlock().check(p, e.getCataMine());
     }
 

@@ -29,7 +29,6 @@ public final class CataMines extends JavaPlugin {
     private me.catalysmrl.catamines.myst.board.Contributions contributions;
     private me.catalysmrl.catamines.myst.dig.LastBlock lastBlock;
     private me.catalysmrl.catamines.myst.challenge.MineChallenges mineChallenges;
-    private me.catalysmrl.catamines.myst.pick.PickaxeSouls pickaxeSouls;
     private CommandManager commandManager;
     private RewardManager rewardManager;
     private RewardParser rewardParser;
@@ -57,7 +56,7 @@ public final class CataMines extends JavaPlugin {
         contributions = new me.catalysmrl.catamines.myst.board.Contributions(this);
         lastBlock = new me.catalysmrl.catamines.myst.dig.LastBlock(this);
         mineChallenges = new me.catalysmrl.catamines.myst.challenge.MineChallenges(this);
-        pickaxeSouls = new me.catalysmrl.catamines.myst.pick.PickaxeSouls(this);
+        // Pickaxe souls (/pick awaken) were removed: pickaxe progression is MystStats now.
         
         // Setup Reward Engine
         rewardManager = new RewardManager();
@@ -116,12 +115,6 @@ public final class CataMines extends JavaPlugin {
             levelCommand.setExecutor(exec);
             levelCommand.setTabCompleter(exec);
         }
-        PluginCommand pickCommand = getCommand("pick");
-        if (pickCommand != null) {
-            var exec = new me.catalysmrl.catamines.myst.pick.PickCommand(this);
-            pickCommand.setExecutor(exec);
-            pickCommand.setTabCompleter(exec);
-        }
         PluginCommand mineCommand = getCommand("mine");
         if (mineCommand != null) {
             var exec = new me.catalysmrl.catamines.myst.event.MineEventCommand(this);
@@ -175,7 +168,6 @@ public final class CataMines extends JavaPlugin {
 
     public me.catalysmrl.catamines.myst.challenge.MineChallenges getMineChallenges() { return mineChallenges; }
 
-    public me.catalysmrl.catamines.myst.pick.PickaxeSouls getPickaxeSouls() { return pickaxeSouls; }
 
     public MineManager getMineManager() {
         return mineManager;

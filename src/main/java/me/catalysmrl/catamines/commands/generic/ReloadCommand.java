@@ -27,7 +27,6 @@ public class ReloadCommand extends AbstractCommand {
         plugin.getLastBlock().reload();
         plugin.getContributions().reload();
         plugin.getMineChallenges().reload();
-        plugin.getPickaxeSouls().reload();
 
         if (loaded < 0) {
             Messages.sendPrefixed(sender, "&cThe mines folder couldn't be read — check the console.");

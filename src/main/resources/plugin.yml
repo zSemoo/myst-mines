@@ -13,10 +13,6 @@ commands:
     description: Your mining level
     aliases: [ "levels", "mininglevel", "ml" ]
     usage: /level [top]
-  pick:
-    description: Your pickaxe's soul
-    aliases: [ "pickaxe", "soul" ]
-    usage: /pick [awaken]
   mine:
     description: Mine events
     aliases: [ "mines", "mineevent" ]
@@ -35,12 +31,6 @@ permissions:
     default: op
   catamines.gui.manage:
     description: Reset and stop mines from /cm gui
-    default: op
-  mystmines.souls.awaken:
-    description: Wake a soul in a pickaxe
-    default: true
-  mystmines.souls.admin:
-    description: Manage pickaxe souls
     default: op
   mystmines.gate.bypass:
     description: Mine anywhere regardless of level gates

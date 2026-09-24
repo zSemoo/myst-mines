@@ -220,3 +220,12 @@ Two things that didn't survive, because 3.0 has no equivalent:
 - Mine contribution boards (who broke most this reset)
 - Prestige-gated mines, tying into MystDrift's prestige checks
 - A boss bar showing how full a mine is before its reset
+
+### Pickaxe souls removed (2026-09-24)
+`/pick awaken` and the whole `myst.pick` package are gone, with `souls.yml`
+and the `mystmines.souls.*` permissions. Pickaxe progression is MystStats
+now (Mining Speed, Mining Fortune, Breaking Power, reforges, stars, gems).
+Old soul lore lines (the ones starting with a zero-width space) are stripped
+by MystStats when it stamps a pickaxe. MystStats hooks this plugin's
+`CataMineBlockBreakEvent` reflectively for Breaking Power gating and gem
+drops - nothing here depends on MystStats.
