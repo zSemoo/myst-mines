@@ -34,7 +34,8 @@ public class AdvancedCataMine extends AbstractCataMine {
             throws DeserializationException {
         String name = section.getString("name");
         if (name == null)
-            throw new DeserializationException();
+            throw new DeserializationException(section.getKeys(false).isEmpty()
+                    ? "the file is empty" : "no 'name:' at the top - it isn't a mine file");
 
         AdvancedCataMine cataMine = new AdvancedCataMine(plugin, name);
 
@@ -47,13 +48,13 @@ public class AdvancedCataMine extends AbstractCataMine {
 
         ConfigurationSection controllerSection = section.getConfigurationSection("controller");
         if (controllerSection == null)
-            throw new DeserializationException();
+            throw new DeserializationException("mine '" + name + "' has no 'controller:' section");
 
         cataMine.controller = CataMineController.deserialize(controllerSection, cataMine);
 
         ConfigurationSection regionsSection = section.getConfigurationSection("regions");
         if (regionsSection == null)
-            throw new DeserializationException();
+            throw new DeserializationException("mine '" + name + "' has no 'regions:' - it was never given an area");
 
         for (String key : regionsSection.getKeys(false)) {
             ConfigurationSection regionSection = regionsSection.getConfigurationSection(key);

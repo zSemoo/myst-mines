@@ -113,14 +113,14 @@ prestige:
   star: "★"
   xp-bonus-per-prestige: 0.05
   commands:
-    - "crazyvouchers give {player} legendary-key 5"
+    - "crazyvouchers give key-legendary 5 {player}"
     - "eco give {player} 250000"
 
 messages:
   level-title: "<gradient:#ffd166:#ff8c00><bold>LEVEL {level}</bold></gradient>"
   level-subtitle: "<gray>Keep swinging."
   milestone-title: "<gradient:#7de2ff:#e08cff><bold>LEVEL {level}</bold></gradient>"
-  milestone-subtitle: "<white>A milestone. Check your inventory."
+  milestone-subtitle: "<white>A milestone. Your rewards are in."
   level-broadcast: "<gray>{player} reached mining level <white>{level}<gray>."
   milestone-broadcast: "<gradient:#ffd166:#ff8c00>✦ {player} reached mining level {level}.</gradient>"
   daily-start: "<gradient:#ffd166:#ff8c00>✦ Daily bonus:</gradient> <gray>your first {blocks} blocks today pay {times}× xp."
@@ -135,6 +135,8 @@ messages:
   action-bar: "<gray>Level <white>{level} <dark_gray>{bar} <gray>{xp}<dark_gray>/{next}"
 
 # Console commands. {player} and {level}.
+# CrazyVouchers: crazyvouchers give <voucher> <amount> <player> - the
+# voucher is the id from CrazyVouchers (key-rare, key-legendary...).
 rewards:
   # Run on every single level up.
   every-level: []
@@ -144,16 +146,16 @@ rewards:
   # Run on one exact level.
   levels:
     10:
-      - "crazyvouchers give {player} rare-key 1"
+      - "crazyvouchers give key-rare 1 {player}"
     25:
-      - "crazyvouchers give {player} legendary-key 1"
+      - "crazyvouchers give key-legendary 1 {player}"
       - "eco give {player} 50000"
     50:
       - "lp user {player} permission set mystmines.veteran true"
-      - "crazyvouchers give {player} legendary-key 3"
+      - "crazyvouchers give key-legendary 3 {player}"
     100:
       - "broadcast &6{player} &7has maxed out mining."
-      - "crazyvouchers give {player} legendary-key 10"
+      - "crazyvouchers give key-legendary 10 {player}"
 
 # What the /level menu says a milestone pays. Commands are opaque, so this
 # is how a player finds out what's coming without asking staff.

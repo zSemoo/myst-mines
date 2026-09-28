@@ -198,6 +198,7 @@ public class MineManager {
 
         try (Stream<Path> stream = Files.list(folder)) {
             cataMines = stream
+                    .filter(f -> f.getFileName().toString().toLowerCase().endsWith(".yml"))
                     .map(this::deserializeCataMineFromYaml)
                     .flatMap(Optional::stream)
                     .collect(Collectors.toList());
@@ -219,7 +220,12 @@ public class MineManager {
     private Optional<CataMine> deserializeCataMineFromYaml(Path path) {
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(path.toFile());
         try {
-            return deserializeCataMine(cfg);
+            return Optional.of(AdvancedCataMine.deserialize(plugin, cfg));
+        } catch (DeserializationException e) {
+            plugin.getLogger().severe("Couldn't load mine file " + path.getFileName() + ": "
+                    + (e.getMessage() == null ? "it isn't a mine file (missing name/controller/regions)" : e.getMessage())
+                    + " - fix or remove it from the mines folder.");
+            return Optional.empty();
         } catch (RuntimeException e) {
             // Name the file. Without this a bad value anywhere in the folder
             // produces a stack trace that says nothing about which mine it
