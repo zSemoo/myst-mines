@@ -45,9 +45,9 @@ challenges:
         - "crazyvouchers give {player} rare-key 1"
 
   clergy:
-    iron_will:
-      name: "Iron Will — 400 iron in clergy"
-      block: iron_ore
+    lapis_devotion:
+      name: "Blue Devotion — 400 lapis in clergy"
+      block: lapis_ore
       amount: 400
       rewards:
         - "eco give {player} 60000"
